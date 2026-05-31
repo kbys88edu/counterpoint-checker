@@ -4,7 +4,6 @@
   --muted: #666666;
   --line: rgba(0, 0, 0, 0.14);
   --card: rgba(255, 255, 255, 0.72);
-
   --ok: #1f7a3f;
   --warn: #9a6a00;
   --error: #b3261e;
@@ -44,9 +43,16 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
+.top-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
 .back-link {
   display: inline-block;
-  margin-bottom: 24px;
   color: var(--muted);
   text-decoration: none;
   font-size: 0.92rem;
@@ -54,6 +60,48 @@ body {
 
 .back-link:hover {
   color: var(--text);
+}
+
+.language-control,
+.tempo-control,
+.timbre-control,
+.playback-control,
+.exercise-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.language-control select,
+.tempo-control input,
+.timbre-control select,
+.playback-control select,
+.exercise-control select {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.tempo-control input {
+  width: 70px;
+}
+
+.timbre-control select,
+.playback-control select {
+  min-width: 150px;
+}
+
+.exercise-control select {
+  min-width: 220px;
 }
 
 .eyebrow {
@@ -105,89 +153,33 @@ h2 {
 }
 
 .score-tools,
-.playback-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 8px 0 22px;
-  align-items: center;
-}
-
+.playback-tools,
 .exercise-tools {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 8px 0 22px;
   align-items: center;
+}
+
+.playback-tools,
+.exercise-tools {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.5);
 }
 
-.exercise-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.65);
+.playback-hint,
+.exercise-description {
+  margin: 0;
   color: var(--muted);
   font-size: 0.86rem;
-}
-
-.exercise-control select {
-  min-width: 220px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  outline: none;
 }
 
 .exercise-description {
   flex: 1;
   min-width: 220px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.playback-tools {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.playback-hint {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.tempo-control {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.65);
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.tempo-control input {
-  width: 70px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font: inherit;
-  outline: none;
 }
 
 .button {
@@ -272,7 +264,6 @@ h2 {
   outline-offset: 4px;
 }
 
-/* SVG staff */
 .staff-line {
   stroke: #181818;
   stroke-width: 1.2;
@@ -314,7 +305,6 @@ h2 {
   font-weight: 700;
 }
 
-/* Notes */
 .note-head {
   fill: #181818;
   stroke: #181818;
@@ -353,7 +343,6 @@ h2 {
   stroke: var(--playhead);
 }
 
-/* Playhead */
 .playhead-line {
   stroke: var(--playhead);
   stroke-width: 3;
@@ -368,7 +357,6 @@ h2 {
   pointer-events: none;
 }
 
-/* Accidentals */
 .accidental {
   font-size: 20px;
   fill: #181818;
@@ -393,7 +381,6 @@ h2 {
   fill: var(--playhead);
 }
 
-/* Current input display */
 .current-notes {
   margin: 0 0 24px;
   padding: 18px;
@@ -415,7 +402,6 @@ h2 {
   color: var(--text);
 }
 
-/* Results */
 .result-section {
   margin-top: 24px;
 }
@@ -473,7 +459,6 @@ h2 {
   color: var(--error);
 }
 
-/* Responsive */
 @media (max-width: 820px) {
   .page {
     width: min(100% - 24px, 1040px);
@@ -485,8 +470,13 @@ h2 {
     padding-top: 32px;
   }
 
+  .top-controls,
   .score-head {
     display: block;
+  }
+
+  .language-control {
+    margin-top: 12px;
   }
 
   .score-status {
@@ -528,12 +518,18 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .language-control,
   .tempo-control,
+  .timbre-control,
+  .playback-control,
   .exercise-control {
     width: 100%;
     justify-content: space-between;
   }
 
+  .language-control select,
+  .timbre-control select,
+  .playback-control select,
   .exercise-control select {
     min-width: 0;
     width: 100%;

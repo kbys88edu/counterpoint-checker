@@ -17,40 +17,54 @@
       <p class="eyebrow">First Species Counterpoint</p>
       <h1>第一種2声対位法チェッカー</h1>
       <p class="lead">
-        定旋律と対旋律を入力して、縦の音程、協和音程、連続5度・連続8度を確認します。
-        対旋律は五線譜をクリックして入力できます。
+        五線譜をクリックして対旋律を入力します。定旋律と対旋律をもとに、協和音程、連続5度、連続8度を確認します。
       </p>
     </header>
 
     <section class="checker-panel">
-      <div class="field">
-        <label for="cantus">定旋律 Cantus Firmus</label>
-        <textarea id="cantus" rows="3">C4 D4 E4 F4 G4 F4 E4 D4 C4</textarea>
-      </div>
-
-      <div class="field">
-        <label for="counterpoint">対旋律 Counterpoint</label>
-        <textarea id="counterpoint" rows="3">G4 F4 G4 A4 B4 A4 G4 F4 C5</textarea>
-      </div>
+      <!-- 解析用。画面には表示しません -->
+      <textarea id="cantus" class="hidden-input">C4 D4 E4 F4 G4 F4 E4 D4 C4</textarea>
+      <textarea id="counterpoint" class="hidden-input"></textarea>
 
       <div class="score-tools">
-        <button class="button small" type="button" onclick="renderScore()">
-          楽譜を更新
+        <button class="button small" type="button" onclick="setExample()">
+          例題を読み込む
         </button>
         <button class="button small" type="button" onclick="undoCounterpointNote()">
-          最後の対旋律を削除
+          最後の音を削除
         </button>
         <button class="button small" type="button" onclick="clearCounterpoint()">
           対旋律をクリア
+        </button>
+        <button class="button small" type="button" onclick="renderScore()">
+          楽譜を更新
         </button>
       </div>
 
       <div class="score-box">
         <div class="score-head">
-          <h2>五線入力</h2>
-          <p>五線譜をクリックすると、その位置に対旋律を入力できます。</p>
+          <div>
+            <h2>五線入力</h2>
+            <p>上の五線をクリックすると、対旋律を入力できます。</p>
+          </div>
+          <div class="score-status" id="scoreStatus">
+            対旋律：0音
+          </div>
         </div>
-        <svg id="scoreEditor" class="score-editor" viewBox="0 0 960 260" role="img" aria-label="対位法入力用五線譜"></svg>
+
+        <svg
+          id="scoreEditor"
+          class="score-editor"
+          viewBox="0 0 960 300"
+          role="img"
+          aria-label="対位法入力用五線譜"
+        ></svg>
+      </div>
+
+      <div class="current-notes">
+        <h2>現在の入力</h2>
+        <p><strong>定旋律：</strong><span id="cantusDisplay"></span></p>
+        <p><strong>対旋律：</strong><span id="counterpointDisplay"></span></p>
       </div>
 
       <button class="button primary" onclick="analyzeCounterpoint()">
@@ -64,17 +78,6 @@
         まだ解析していません。
       </div>
       <div id="result" class="result-list"></div>
-    </section>
-
-    <section class="guide card">
-      <h2>入力ルール</h2>
-      <p>
-        音名は <strong>C4 D4 E4</strong> のように、英語音名 + オクターブ番号で入力してください。
-      </p>
-      <p>
-        五線入力では自然音のみを入力します。シャープやフラットを使う場合は、テキスト欄で直接入力してください。
-      </p>
-      <pre>C4 D4 E4 F#4 G4 Bb4 C5</pre>
     </section>
   </main>
 

@@ -32,23 +32,79 @@ const SCORE = {
 const EXERCISES = [
   {
     id: "species1-c-major-01",
-    title: "第一種 C major / 基本",
-    description: "Cから始まりCで終わる、最初の練習用定旋律です。",
-    cantus: ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"],
+    title: "第一種 C major 01",
+    description: "基本的な山型。順次進行中心の定旋律です。",
+    cantus: ["C4", "D4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
     counterpoint: []
   },
   {
     id: "species1-c-major-02",
-    title: "第一種 C major / 山型",
-    description: "中央に向かって上行し、後半で下行する練習です。",
-    cantus: ["C4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
+    title: "第一種 C major 02",
+    description: "小さな跳躍を含む練習。跳躍後は反対方向に戻ります。",
+    cantus: ["C4", "E4", "D4", "F4", "G4", "A4", "G4", "E4", "F4", "D4", "C4"],
+    counterpoint: []
+  },
+  {
+    id: "species1-c-major-03",
+    title: "第一種 C major 03",
+    description: "低めから始まり、中央で頂点を作る旋律です。",
+    cantus: ["C4", "D4", "F4", "E4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
+    counterpoint: []
+  },
+  {
+    id: "species1-g-major-01",
+    title: "第一種 G major 01",
+    description: "G majorの基本課題。F#を含みます。",
+    cantus: ["G3", "A3", "B3", "C4", "D4", "E4", "D4", "C4", "B3", "A3", "G3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-g-major-02",
+    title: "第一種 G major 02",
+    description: "順次進行と3度跳躍を組み合わせた課題です。",
+    cantus: ["G3", "B3", "A3", "C4", "D4", "E4", "D4", "B3", "C4", "A3", "G3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-f-major-01",
+    title: "第一種 F major 01",
+    description: "F majorの基本課題。Bbを含みます。",
+    cantus: ["F3", "G3", "A3", "Bb3", "C4", "D4", "C4", "Bb3", "A3", "G3", "F3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-f-major-02",
+    title: "第一種 F major 02",
+    description: "ゆるやかな上行と下行を持つF majorの課題です。",
+    cantus: ["F3", "A3", "G3", "Bb3", "C4", "D4", "C4", "A3", "Bb3", "G3", "F3"],
     counterpoint: []
   },
   {
     id: "species1-a-minor-01",
-    title: "第一種 A minor / 短調風",
-    description: "短調的な動きの定旋律です。終止音程に注意してください。",
-    cantus: ["A3", "C4", "D4", "E4", "F4", "E4", "D4", "B3", "A3"],
+    title: "第一種 A minor 01",
+    description: "自然短音階に近い短調課題です。",
+    cantus: ["A3", "B3", "C4", "D4", "E4", "F4", "E4", "D4", "C4", "B3", "A3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-a-minor-02",
+    title: "第一種 A minor 02",
+    description: "短調で3度跳躍を含む課題です。",
+    cantus: ["A3", "C4", "B3", "D4", "E4", "F4", "E4", "C4", "D4", "B3", "A3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-d-minor-01",
+    title: "第一種 D minor 01",
+    description: "D minorの基本課題。Bbを含みます。",
+    cantus: ["D4", "E4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "E4", "D4"],
+    counterpoint: []
+  },
+  {
+    id: "species1-d-minor-02",
+    title: "第一種 D minor 02",
+    description: "D minorで跳躍後に反対方向へ進む課題です。",
+    cantus: ["D4", "F4", "E4", "G4", "A4", "Bb4", "A4", "F4", "G4", "E4", "D4"],
     counterpoint: []
   },
   {

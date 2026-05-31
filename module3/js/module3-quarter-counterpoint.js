@@ -27,7 +27,7 @@ const I18N = {
     backLink: "← トップへ戻る",
     languageLabel: "言語",
     title: "Module 3｜2声4分音符対位法チェッカー",
-    lead: "定旋律1音に対して、対旋律を4分音符4つで入力します。タイでつながれた音は扱いません。五線譜をクリックして音を置き、↑↓で半音移動、←→で前後の4分音符へ移動できます。",
+    lead: "ヘ音記号の全音符の定旋律1音に対して、ト音記号の対旋律を4分音符4つで入力します。タイでつながれた音は扱いません。五線譜をクリックして音を置き、↑↓で半音移動、←→で前後の4分音符へ移動できます。",
     levelFilterLabel: "レベル",
     levelAll: "すべて",
     levelBeginner: "初級",
@@ -54,7 +54,7 @@ const I18N = {
     timbreBell: "Bell / ベル風",
     playbackHint: "Space：再生 / 停止　｜　← / →：前後の4分音符へ移動",
     scoreInputTitle: "五線入力",
-    scoreInputHelp: "上段に4分音符の対旋律、下段に定旋律を表示します。タイ入力はありません。",
+    scoreInputHelp: "上段はト音記号の4分音符対旋律、下段はヘ音記号の全音符定旋律です。タイ入力はありません。",
     currentInput: "現在の入力",
     cantusLabel: "定旋律：",
     counterpointLabel: "対旋律：",
@@ -106,7 +106,7 @@ const I18N = {
     backLink: "← Retour à l’accueil",
     languageLabel: "Langue",
     title: "Module 3 — Contrepoint à deux voix en noires",
-    lead: "Pour chaque note du cantus, saisissez quatre noires dans le contrepoint. Ce module n’utilise pas de notes liées. Cliquez sur la portée pour placer une note, ↑↓ déplacent par demi-ton, ←→ changent de noire.",
+    lead: "Pour chaque ronde du cantus en clé de fa, saisissez quatre noires dans le contrepoint en clé de sol. Ce module n’utilise pas de notes liées. Cliquez sur la portée pour placer une note, ↑↓ déplacent par demi-ton, ←→ changent de noire.",
     levelFilterLabel: "Niveau",
     levelAll: "Tous",
     levelBeginner: "Débutant",
@@ -133,7 +133,7 @@ const I18N = {
     timbreBell: "Bell / cloche",
     playbackHint: "Espace : lecture / arrêt　｜　← / → : noire précédente / suivante",
     scoreInputTitle: "Saisie sur portée",
-    scoreInputHelp: "La portée supérieure montre le contrepoint en noires ; la portée inférieure montre le cantus. Il n’y a pas de liaison.",
+    scoreInputHelp: "La portée supérieure montre le contrepoint en noires en clé de sol ; la portée inférieure montre le cantus en rondes en clé de fa. Il n’y a pas de liaison.",
     currentInput: "Saisie actuelle",
     cantusLabel: "Cantus :",
     counterpointLabel: "Contrepoint :",
@@ -189,7 +189,7 @@ const EXERCISES = [
     level: "beginner",
     title: { ja: "初級 01｜C major｜順次進行", fr: "Débutant 01｜Do majeur｜Mouvement conjoint" },
     description: {
-      ja: "定旋律1音につき4つの4分音符を置く基本課題です。",
+      ja: "全音符の定旋律1音につき4つの4分音符を置く基本課題です。",
       fr: "Exercice de base : quatre noires de contrepoint pour chaque note du cantus."
     },
     cantus: ["C4", "D4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
@@ -896,7 +896,19 @@ function deleteSelectedNote() {
   renderScore();
 }
 
-function drawStaff(svg, bottomLineY, label, noteCount) {
+function drawClef(svg, bottomLineY, clefType) {
+  const clef = clefType === "bass" ? "𝄢" : "𝄞";
+  const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
+  const y = clefType === "bass" ? bottomLineY - 20 : bottomLineY - 20;
+
+  svg.appendChild(createSvgElement("text", {
+    x: 52,
+    y,
+    class: className
+  })).textContent = clef;
+}
+
+function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
   const startX = SCORE.left - 30;
   const endX = SCORE.width - SCORE.right + 10;
 
@@ -905,7 +917,9 @@ function drawStaff(svg, bottomLineY, label, noteCount) {
     svg.appendChild(createSvgElement("line", { x1: startX, y1: y, x2: endX, y2: y, class: "staff-line" }));
   }
 
-  svg.appendChild(createSvgElement("text", { x: 22, y: bottomLineY - 22, class: "voice-label" })).textContent = label;
+  drawClef(svg, bottomLineY, clefType);
+
+  svg.appendChild(createSvgElement("text", { x: 22, y: bottomLineY - 58, class: "voice-label" })).textContent = label;
 
   const positions = getScorePositions(noteCount);
 
@@ -1065,8 +1079,8 @@ function renderScore() {
   if (playbackIndex >= quarterCount) playbackIndex = 0;
   if (playbackIndex < 0) playbackIndex = 0;
 
-  drawStaff(svg, SCORE.bottomLineY, "Counterpoint", quarterCount);
-  drawStaff(svg, SCORE.cantusBottomLineY, "Cantus", quarterCount);
+  drawStaff(svg, SCORE.bottomLineY, "Counterpoint / quarter notes / treble clef", quarterCount, "treble");
+  drawStaff(svg, SCORE.cantusBottomLineY, "Cantus / whole notes / bass clef", quarterCount, "bass");
   drawPlayhead(svg, positions, quarterCount);
 
   counterpoint.forEach((note, i) => {

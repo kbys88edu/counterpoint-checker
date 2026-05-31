@@ -323,6 +323,34 @@
         letter-spacing: -0.05em;
       }
     }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      display: block;
+      width: 42px;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .brand-text {
+      color: var(--muted);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+    }
+
+    @media (max-width: 520px) {
+      .brand-logo {
+        width: 38px;
+      }
+    }
+
   </style>
 </head>
 
@@ -330,7 +358,10 @@
   <main class="page">
     <header class="header">
       <div class="top-controls">
-        <p class="home-label">Atelier Composition Son</p>
+        <a class="brand-link" href="index.html" aria-label="Atelier Composition Son">
+          <img class="brand-logo" src="images/acs-logo.png" alt="Atelier Composition Son" />
+          <span class="brand-text">Atelier Composition Son</span>
+        </a>
 
         <label class="language-control" for="languageSelect">
           <span data-i18n="languageLabel">言語</span>

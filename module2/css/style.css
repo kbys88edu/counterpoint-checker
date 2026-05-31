@@ -409,3 +409,80 @@ h2 {
 
   h1 { letter-spacing: -0.045em; }
 }
+
+
+.note-head.open {
+  fill: #ffffff;
+  stroke: #181818;
+  stroke-width: 1.6;
+}
+
+.note-head.open.cantus {
+  fill: #ffffff;
+  stroke: rgba(0, 0, 0, 0.42);
+  stroke-width: 1.6;
+}
+
+.note-head.open.selected {
+  fill: #ffffff;
+  stroke: var(--selected);
+  stroke-width: 2;
+}
+
+.note-head.open.playing {
+  fill: #ffffff;
+  stroke: var(--playhead);
+  stroke-width: 2;
+}
+
+
+.clef-symbol {
+  font-family: "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  fill: rgba(0, 0, 0, 0.72);
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.clef-symbol.treble {
+  font-size: 58px;
+}
+
+.clef-symbol.bass {
+  font-size: 48px;
+}
+
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  width: 42px;
+  height: auto;
+  object-fit: contain;
+}
+
+.brand-text {
+  color: var(--muted);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 520px) {
+  .brand-logo {
+    width: 38px;
+  }
+}
+
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}

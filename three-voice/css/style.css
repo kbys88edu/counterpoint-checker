@@ -291,7 +291,7 @@ h2 {
 
 .score-editor {
   width: 100%;
-  min-height: 520px;
+  min-height: 170px;
   display: block;
   border-radius: 16px;
   background: #ffffff;
@@ -542,7 +542,7 @@ h2 {
   }
 
   .score-editor {
-    min-height: 440px;
+    min-height: 160px;
   }
 }
 
@@ -595,4 +595,59 @@ h2 {
   h1 {
     letter-spacing: -0.045em;
   }
+}
+
+
+.voice-score-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.voice-score-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.voice-score-card.editable-voice {
+  cursor: pointer;
+}
+
+.voice-score-card.editable-voice:hover {
+  border-color: rgba(29, 78, 216, 0.34);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.voice-score-card.active-edit-voice {
+  border-color: rgba(29, 78, 216, 0.55);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.08);
+}
+
+.voice-score-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.voice-score-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+}
+
+.voice-score-header span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.voice-score-editor {
+  min-height: 170px;
+}
+
+.voice-score-editor.locked {
+  cursor: default;
+  background: rgba(255, 255, 255, 0.78);
 }

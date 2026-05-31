@@ -19,7 +19,7 @@ const SCORE = {
   cantusBottomLineY: 260,
   playheadTop: 55,
   playheadBottom: 308,
-  halfsPerCantus: 4
+  quartersPerCantus: 2
 };
 
 const I18N = {
@@ -394,7 +394,7 @@ function getStepDurationSeconds() {
 }
 
 function getRequiredHalfCount() {
-  return getNotesFromTextarea("cantus").length * SCORE.halfsPerCantus;
+  return getNotesFromTextarea("cantus").length * SCORE.quartersPerCantus;
 }
 
 function getPlaybackLength() {
@@ -408,14 +408,14 @@ function playVerticalSonority(index) {
 
   const qDuration = getStepDurationSeconds();
   const noteDuration = Math.max(0.35, qDuration * 0.9);
-  const cantusIndex = Math.floor(index / SCORE.halfsPerCantus);
+  const cantusIndex = Math.floor(index / SCORE.quartersPerCantus);
 
   const cantusNote = cantus[cantusIndex];
   const counterpointNote = counterpoint[index];
 
   if ((mode === "both" || mode === "cantus") && cantusNote) {
-    const cantusDuration = index % SCORE.halfsPerCantus === 0 ? Math.max(0.5, qDuration * 3.85) : noteDuration;
-    if (mode === "cantus" || index % SCORE.halfsPerCantus === 0) {
+    const cantusDuration = index % SCORE.quartersPerCantus === 0 ? Math.max(0.5, qDuration * 3.85) : noteDuration;
+    if (mode === "cantus" || index % SCORE.quartersPerCantus === 0) {
       playNoteName(cantusNote, cantusDuration, mode === "cantus" ? 1 : 0.62);
     }
   }
@@ -702,7 +702,7 @@ function analyzeCounterpoint() {
     return;
   }
 
-  const required = cantus.length * SCORE.halfsPerCantus;
+  const required = cantus.length * SCORE.quartersPerCantus;
   if (counterpoint.length !== required) {
     addResult(results, "error", t("lengthMismatch")(required, counterpoint.length));
     errorCount++;
@@ -719,8 +719,8 @@ function analyzeCounterpoint() {
   const counterMidi = counterpoint.map(noteToMidi);
 
   for (let i = 0; i < length; i++) {
-    const measure = Math.floor(i / SCORE.halfsPerCantus);
-    const beatInMeasure = i % SCORE.halfsPerCantus;
+    const measure = Math.floor(i / SCORE.quartersPerCantus);
+    const beatInMeasure = i % SCORE.quartersPerCantus;
     const cMidi = cantusMidi[measure];
     const cpMidi = counterMidi[i];
 
@@ -759,8 +759,8 @@ function analyzeCounterpoint() {
   }
 
   for (let i = 0; i < length - 1; i++) {
-    const measure1 = Math.floor(i / SCORE.halfsPerCantus);
-    const measure2 = Math.floor((i + 1) / SCORE.halfsPerCantus);
+    const measure1 = Math.floor(i / SCORE.quartersPerCantus);
+    const measure2 = Math.floor((i + 1) / SCORE.quartersPerCantus);
 
     if (measure1 === measure2) continue;
 
@@ -1070,7 +1070,7 @@ function renderScore() {
 
   const cantus = getNotesFromTextarea("cantus");
   const counterpoint = getNotesFromTextarea("counterpoint");
-  const halfCount = Math.max(cantus.length * SCORE.halfsPerCantus, counterpoint.length, 1);
+  const halfCount = Math.max(cantus.length * SCORE.quartersPerCantus, counterpoint.length, 1);
   const positions = getScorePositions(halfCount);
 
   if (selectedIndex >= halfCount) selectedIndex = halfCount - 1;
@@ -1087,8 +1087,8 @@ function renderScore() {
   });
 
   cantus.forEach((note, i) => {
-    const x = positions[i * SCORE.halfsPerCantus];
-    if (note && x !== undefined) drawNote(svg, note, x, "cantus", i * SCORE.halfsPerCantus, SCORE.cantusBottomLineY, "whole");
+    const x = positions[i * SCORE.quartersPerCantus];
+    if (note && x !== undefined) drawNote(svg, note, x, "cantus", i * SCORE.quartersPerCantus, SCORE.cantusBottomLineY, "whole");
   });
 
   updateDisplays();

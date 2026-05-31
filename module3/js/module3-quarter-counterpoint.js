@@ -1006,11 +1006,8 @@ function drawAccidental(svg, parsed, x, y, isCantus, isSelected, isCurrentPlayba
 }
 
 function drawQuarterFlag(svg, x, y, isSelected, isCurrentPlayback) {
-  const d = `M ${x + 7} ${y - 34} C ${x + 24} ${y - 28}, ${x + 24} ${y - 12}, ${x + 8} ${y - 8}`;
-  svg.appendChild(createSvgElement("path", {
-    d,
-    class: `flag${isSelected ? " selected" : ""}${isCurrentPlayback ? " playing" : ""}`
-  }));
+  // Module 3 uses quarter notes. Quarter notes have no flag.
+  return;
 }
 
 function drawNote(svg, note, x, voice, index, bottomLineY, duration = "quarter") {
@@ -1025,10 +1022,8 @@ function drawNote(svg, note, x, voice, index, bottomLineY, duration = "quarter")
   drawLedgerLines(svg, x, y, bottomLineY);
   drawAccidental(svg, parsed, x, y, isCantus, isSelected, isCurrentPlayback);
 
-  // Module 3:
-  // - cantus: whole note = open notehead, no stem
-  // - counterpoint: quarter note = filled notehead + stem, no flag
   if (isCantus) {
+    // Whole note: open notehead, no stem.
     svg.appendChild(createSvgElement("ellipse", {
       cx: x,
       cy: y,
@@ -1038,6 +1033,7 @@ function drawNote(svg, note, x, voice, index, bottomLineY, duration = "quarter")
       class: isCurrentPlayback ? "note-head open cantus playing" : "note-head open cantus"
     }));
   } else {
+    // Quarter note: filled notehead + stem only. No flag.
     svg.appendChild(createSvgElement("ellipse", {
       cx: x,
       cy: y,

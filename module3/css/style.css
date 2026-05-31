@@ -493,3 +493,10 @@ h2 {
   fill: rgba(0, 0, 0, 0.5);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
+
+
+/* Module 3 flag kill switch: quarter notes must not show flags. */
+.flag {
+  display: none !important;
+  opacity: 0 !important;
+}

@@ -27,12 +27,22 @@
       <textarea id="counterpoint" class="hidden-input"></textarea>
 
       <div class="exercise-tools">
+        <label class="exercise-control" for="levelFilterSelect">
+          <span data-i18n="levelFilterLabel">レベル</span>
+          <select id="levelFilterSelect">
+            <option value="all" data-i18n="levelAll">すべて</option>
+            <option value="beginner" data-i18n="levelBeginner">初級</option>
+            <option value="intermediate" data-i18n="levelIntermediate">中級</option>
+            <option value="advanced" data-i18n="levelAdvanced">上級</option>
+          </select>
+        </label>
+
         <label class="exercise-control" for="exerciseSelect">
-          課題
+          <span data-i18n="exerciseLabel">課題</span>
           <select id="exerciseSelect"></select>
         </label>
 
-        <button class="button small" type="button" onclick="loadSelectedExercise()">
+        <button class="button small" type="button" onclick="loadSelectedExercise()" data-i18n="loadExercise">
           課題を読み込む
         </button>
 

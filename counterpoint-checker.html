@@ -18,6 +18,7 @@
       <h1>第一種2声対位法チェッカー</h1>
       <p class="lead">
         定旋律と対旋律を入力して、縦の音程、協和音程、連続5度・連続8度を確認します。
+        対旋律は五線譜をクリックして入力できます。
       </p>
     </header>
 
@@ -30,6 +31,26 @@
       <div class="field">
         <label for="counterpoint">対旋律 Counterpoint</label>
         <textarea id="counterpoint" rows="3">G4 F4 G4 A4 B4 A4 G4 F4 C5</textarea>
+      </div>
+
+      <div class="score-tools">
+        <button class="button small" type="button" onclick="renderScore()">
+          楽譜を更新
+        </button>
+        <button class="button small" type="button" onclick="undoCounterpointNote()">
+          最後の対旋律を削除
+        </button>
+        <button class="button small" type="button" onclick="clearCounterpoint()">
+          対旋律をクリア
+        </button>
+      </div>
+
+      <div class="score-box">
+        <div class="score-head">
+          <h2>五線入力</h2>
+          <p>五線譜をクリックすると、その位置に対旋律を入力できます。</p>
+        </div>
+        <svg id="scoreEditor" class="score-editor" viewBox="0 0 960 260" role="img" aria-label="対位法入力用五線譜"></svg>
       </div>
 
       <button class="button primary" onclick="analyzeCounterpoint()">
@@ -51,7 +72,7 @@
         音名は <strong>C4 D4 E4</strong> のように、英語音名 + オクターブ番号で入力してください。
       </p>
       <p>
-        シャープとフラットも使えます。
+        五線入力では自然音のみを入力します。シャープやフラットを使う場合は、テキスト欄で直接入力してください。
       </p>
       <pre>C4 D4 E4 F#4 G4 Bb4 C5</pre>
     </section>

@@ -29,98 +29,252 @@ const SCORE = {
   playheadBottom: 228
 };
 
+const I18N = {
+  ja: {
+    backLink: "← トップへ戻る",
+    languageLabel: "言語",
+    title: "第一種2声対位法チェッカー",
+    lead: "五線譜をクリックして対旋律を入力します。↑で半音上行、↓で半音下行、← / → で前後の音へ移動します。スペースキーで定旋律と対旋律を同時に再生・停止できます。",
+    exerciseLabel: "課題",
+    loadExercise: "課題を読み込む",
+    loadExample: "例題を読み込む",
+    deleteLast: "最後の音を削除",
+    clearCounterpoint: "対旋律をクリア",
+    refreshScore: "楽譜を更新",
+    playSelected: "選択音を鳴らす",
+    resetStart: "最初に戻す",
+    playbackModeLabel: "再生対象",
+    playBoth: "両声",
+    playCantus: "定旋律のみ",
+    playCounterpoint: "対旋律のみ",
+    timbreLabel: "音色",
+    timbreSine: "Sine / 柔らかい",
+    timbreTriangle: "Triangle / 素直",
+    timbreSquare: "Square / 電子的",
+    timbreSaw: "Sawtooth / 明るい",
+    timbreOrgan: "Organ / オルガン風",
+    timbreBell: "Bell / ベル風",
+    playbackHint: "Space：再生 / 停止　｜　← / →：前後の音へ移動",
+    scoreInputTitle: "五線入力",
+    scoreInputHelp: "五線をクリックして音を置きます。置いた音は青色で選択され、↑↓で半音移動、←→で前後の音へ移動できます。",
+    currentInput: "現在の入力",
+    cantusLabel: "定旋律：",
+    counterpointLabel: "対旋律：",
+    analyze: "解析する",
+    analysisResult: "解析結果",
+    notAnalyzed: "まだ解析していません。",
+    play: "再生",
+    stop: "停止",
+    noInput: "未入力",
+    status: (cp, cf, pos, len) => `対旋律：${cp}音 / 定旋律：${cf}音 / 再生位置：${pos}/${len}`,
+    summaryOk: (ok) => `大きな問題は見つかりませんでした。OK項目：${ok}件`,
+    summaryCounts: (e, w, ok) => `禁止：${e}件 / 注意：${w}件 / OK：${ok}件`,
+    labelOk: "OK",
+    labelWarn: "注意",
+    labelError: "禁止",
+    needInput: "定旋律と対旋律を入力してください。",
+    lengthMismatch: (cf, cp) => `音数が一致していません。定旋律は${cf}音、対旋律は${cp}音です。`,
+    lengthOk: (n) => `音数は一致しています。全${n}音です。`,
+    invalidNote: (i) => `${i}音目：音名の形式が正しくありません。例：C4, F#4, Bb3`,
+    intervalOk: (i, c, cp, name) => `${i}音目：${c} - ${cp} は ${name} です。`,
+    intervalBad: (i, c, cp, name) => `${i}音目：${c} - ${cp} は ${name} です。第一種対位法では不協和音程です。`,
+    startOk: (name) => `開始音程は ${name} です。`,
+    startBad: (name) => `開始音程は ${name} です。第一種では完全1度・完全5度・完全8度で始めるのが基本です。`,
+    endOk: (name) => `終止音程は ${name} です。`,
+    endBad: (name) => `終止音程は ${name} です。第一種では完全1度または完全8度で終止するのが基本です。`,
+    parallelFifth: (i) => `${i}音目 → ${i + 1}音目：連続5度があります。`,
+    parallelOctave: (i) => `${i}音目 → ${i + 1}音目：連続8度または連続1度があります。`,
+    intervals: {
+      perfectUnison: "完全1度",
+      perfectOctave: "完全8度",
+      compoundPerfect: "完全8度または複合完全音程",
+      m2: "短2度",
+      M2: "長2度",
+      m3: "短3度",
+      M3: "長3度",
+      P4: "完全4度",
+      tritone: "増4度 / 減5度",
+      P5: "完全5度",
+      m6: "短6度",
+      M6: "長6度",
+      m7: "短7度",
+      M7: "長7度",
+      unknown: "不明な音程"
+    }
+  },
+  fr: {
+    backLink: "← Retour à l’accueil",
+    languageLabel: "Langue",
+    title: "Correcteur de contrepoint à deux voix — première espèce",
+    lead: "Cliquez sur la portée pour saisir le contrepoint. ↑ monte d’un demi-ton, ↓ descend d’un demi-ton, ← / → déplace la sélection. La barre d’espace lance ou arrête la lecture.",
+    exerciseLabel: "Exercice",
+    loadExercise: "Charger l’exercice",
+    loadExample: "Charger l’exemple",
+    deleteLast: "Supprimer la dernière note",
+    clearCounterpoint: "Effacer le contrepoint",
+    refreshScore: "Actualiser la partition",
+    playSelected: "Jouer la note sélectionnée",
+    resetStart: "Revenir au début",
+    playbackModeLabel: "Lecture",
+    playBoth: "Deux voix",
+    playCantus: "Cantus seul",
+    playCounterpoint: "Contrepoint seul",
+    timbreLabel: "Timbre",
+    timbreSine: "Sine / doux",
+    timbreTriangle: "Triangle / simple",
+    timbreSquare: "Square / électronique",
+    timbreSaw: "Sawtooth / brillant",
+    timbreOrgan: "Organ / orgue",
+    timbreBell: "Bell / cloche",
+    playbackHint: "Espace : lecture / arrêt　｜　← / → : note précédente / suivante",
+    scoreInputTitle: "Saisie sur portée",
+    scoreInputHelp: "Cliquez sur la portée pour placer une note. La note sélectionnée apparaît en bleu. ↑↓ déplacent par demi-ton, ←→ changent de note.",
+    currentInput: "Saisie actuelle",
+    cantusLabel: "Cantus :",
+    counterpointLabel: "Contrepoint :",
+    analyze: "Analyser",
+    analysisResult: "Résultat de l’analyse",
+    notAnalyzed: "Pas encore analysé.",
+    play: "Lecture",
+    stop: "Arrêter",
+    noInput: "Non saisi",
+    status: (cp, cf, pos, len) => `Contrepoint : ${cp} notes / Cantus : ${cf} notes / Position : ${pos}/${len}`,
+    summaryOk: (ok) => `Aucun problème majeur détecté. Éléments OK : ${ok}`,
+    summaryCounts: (e, w, ok) => `Interdits : ${e} / Attention : ${w} / OK : ${ok}`,
+    labelOk: "OK",
+    labelWarn: "Attention",
+    labelError: "Interdit",
+    needInput: "Veuillez saisir le cantus et le contrepoint.",
+    lengthMismatch: (cf, cp) => `Le nombre de notes ne correspond pas. Cantus : ${cf}, contrepoint : ${cp}.`,
+    lengthOk: (n) => `Le nombre de notes correspond. Total : ${n}.`,
+    invalidNote: (i) => `Note ${i} : format de note invalide. Exemple : C4, F#4, Bb3`,
+    intervalOk: (i, c, cp, name) => `Note ${i} : ${c} - ${cp} forme ${name}.`,
+    intervalBad: (i, c, cp, name) => `Note ${i} : ${c} - ${cp} forme ${name}. En première espèce, cet intervalle est dissonant.`,
+    startOk: (name) => `L’intervalle initial est ${name}.`,
+    startBad: (name) => `L’intervalle initial est ${name}. En première espèce, on commence normalement par l’unisson, la quinte ou l’octave.`,
+    endOk: (name) => `L’intervalle final est ${name}.`,
+    endBad: (name) => `L’intervalle final est ${name}. En première espèce, on termine normalement par l’unisson ou l’octave.`,
+    parallelFifth: (i) => `Note ${i} → ${i + 1} : quintes parallèles.`,
+    parallelOctave: (i) => `Note ${i} → ${i + 1} : octaves ou unissons parallèles.`,
+    intervals: {
+      perfectUnison: "unisson juste",
+      perfectOctave: "octave juste",
+      compoundPerfect: "octave juste ou intervalle composé juste",
+      m2: "seconde mineure",
+      M2: "seconde majeure",
+      m3: "tierce mineure",
+      M3: "tierce majeure",
+      P4: "quarte juste",
+      tritone: "quarte augmentée / quinte diminuée",
+      P5: "quinte juste",
+      m6: "sixte mineure",
+      M6: "sixte majeure",
+      m7: "septième mineure",
+      M7: "septième majeure",
+      unknown: "intervalle inconnu"
+    }
+  }
+};
+
 const EXERCISES = [
   {
     id: "species1-c-major-01",
-    title: "第一種 C major 01",
-    description: "基本的な山型。順次進行中心の定旋律です。",
+    title: { ja: "第一種 C major 01", fr: "Première espèce — Do majeur 01" },
+    description: {
+      ja: "基本的な山型。順次進行中心の定旋律です。",
+      fr: "Forme en arche, principalement conjointe."
+    },
     cantus: ["C4", "D4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
     counterpoint: []
   },
   {
     id: "species1-c-major-02",
-    title: "第一種 C major 02",
-    description: "小さな跳躍を含む練習。跳躍後は反対方向に戻ります。",
+    title: { ja: "第一種 C major 02", fr: "Première espèce — Do majeur 02" },
+    description: {
+      ja: "小さな跳躍を含む練習。跳躍後は反対方向に戻ります。",
+      fr: "Exercice avec petits sauts, compensés par un mouvement contraire."
+    },
     cantus: ["C4", "E4", "D4", "F4", "G4", "A4", "G4", "E4", "F4", "D4", "C4"],
     counterpoint: []
   },
   {
-    id: "species1-c-major-03",
-    title: "第一種 C major 03",
-    description: "低めから始まり、中央で頂点を作る旋律です。",
-    cantus: ["C4", "D4", "F4", "E4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
-    counterpoint: []
-  },
-  {
     id: "species1-g-major-01",
-    title: "第一種 G major 01",
-    description: "G majorの基本課題。F#を含みます。",
+    title: { ja: "第一種 G major 01", fr: "Première espèce — Sol majeur 01" },
+    description: {
+      ja: "G majorの基本課題。F#を含みます。",
+      fr: "Exercice de base en Sol majeur, avec Fa#."
+    },
     cantus: ["G3", "A3", "B3", "C4", "D4", "E4", "D4", "C4", "B3", "A3", "G3"],
     counterpoint: []
   },
   {
-    id: "species1-g-major-02",
-    title: "第一種 G major 02",
-    description: "順次進行と3度跳躍を組み合わせた課題です。",
-    cantus: ["G3", "B3", "A3", "C4", "D4", "E4", "D4", "B3", "C4", "A3", "G3"],
-    counterpoint: []
-  },
-  {
     id: "species1-f-major-01",
-    title: "第一種 F major 01",
-    description: "F majorの基本課題。Bbを含みます。",
+    title: { ja: "第一種 F major 01", fr: "Première espèce — Fa majeur 01" },
+    description: {
+      ja: "F majorの基本課題。Bbを含みます。",
+      fr: "Exercice de base en Fa majeur, avec Sib."
+    },
     cantus: ["F3", "G3", "A3", "Bb3", "C4", "D4", "C4", "Bb3", "A3", "G3", "F3"],
     counterpoint: []
   },
   {
-    id: "species1-f-major-02",
-    title: "第一種 F major 02",
-    description: "ゆるやかな上行と下行を持つF majorの課題です。",
-    cantus: ["F3", "A3", "G3", "Bb3", "C4", "D4", "C4", "A3", "Bb3", "G3", "F3"],
-    counterpoint: []
-  },
-  {
     id: "species1-a-minor-01",
-    title: "第一種 A minor 01",
-    description: "自然短音階に近い短調課題です。",
+    title: { ja: "第一種 A minor 01", fr: "Première espèce — La mineur 01" },
+    description: {
+      ja: "自然短音階に近い短調課題です。",
+      fr: "Exercice en mineur, proche du mineur naturel."
+    },
     cantus: ["A3", "B3", "C4", "D4", "E4", "F4", "E4", "D4", "C4", "B3", "A3"],
     counterpoint: []
   },
   {
-    id: "species1-a-minor-02",
-    title: "第一種 A minor 02",
-    description: "短調で3度跳躍を含む課題です。",
-    cantus: ["A3", "C4", "B3", "D4", "E4", "F4", "E4", "C4", "D4", "B3", "A3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-d-minor-01",
-    title: "第一種 D minor 01",
-    description: "D minorの基本課題。Bbを含みます。",
-    cantus: ["D4", "E4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "E4", "D4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-d-minor-02",
-    title: "第一種 D minor 02",
-    description: "D minorで跳躍後に反対方向へ進む課題です。",
-    cantus: ["D4", "F4", "E4", "G4", "A4", "Bb4", "A4", "F4", "G4", "E4", "D4"],
-    counterpoint: []
-  },
-  {
     id: "species1-example-filled",
-    title: "入力例つき",
-    description: "動作確認用。対旋律があらかじめ入っています。",
+    title: { ja: "入力例つき", fr: "Exemple rempli" },
+    description: {
+      ja: "動作確認用。対旋律があらかじめ入っています。",
+      fr: "Exemple de démonstration avec un contrepoint déjà saisi."
+    },
     cantus: ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"],
     counterpoint: ["G4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "C5"]
   }
 ];
 
+let currentLanguage = "ja";
 let selectedIndex = 0;
 let playbackIndex = 0;
 let isPlaying = false;
 let playbackTimerId = null;
 let audioContext = null;
+
+function t(key) {
+  return I18N[currentLanguage][key];
+}
+
+function setLanguage(lang) {
+  if (!I18N[lang]) return;
+
+  currentLanguage = lang;
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    const key = element.getAttribute("data-i18n");
+    const value = t(key);
+
+    if (typeof value === "string") {
+      element.textContent = value;
+    }
+  });
+
+  populateExerciseSelect(true);
+  updateExerciseDescription();
+  updateDisplays();
+  updatePlayPauseButton();
+
+  const summary = document.getElementById("summary");
+  if (summary && summary.getAttribute("data-i18n") === "notAnalyzed") {
+    summary.textContent = t("notAnalyzed");
+  }
+}
 
 function getAudioContext() {
   if (!audioContext) {
@@ -134,37 +288,78 @@ function getAudioContext() {
   return audioContext;
 }
 
+function getTimbre() {
+  const select = document.getElementById("timbreSelect");
+  return select ? select.value : "triangle";
+}
+
+function getTimbreConfig(timbre = getTimbre()) {
+  const configs = {
+    sine: { waveform: "sine", gain: 0.17, attack: 0.015, release: 0.06, secondOscillator: false },
+    triangle: { waveform: "triangle", gain: 0.18, attack: 0.012, release: 0.07, secondOscillator: false },
+    square: { waveform: "square", gain: 0.10, attack: 0.01, release: 0.05, secondOscillator: false },
+    sawtooth: { waveform: "sawtooth", gain: 0.09, attack: 0.01, release: 0.06, secondOscillator: false },
+    organ: { waveform: "sine", gain: 0.13, attack: 0.02, release: 0.12, secondOscillator: true, secondRatio: 2, secondGain: 0.035, secondWaveform: "sine" },
+    bell: { waveform: "sine", gain: 0.15, attack: 0.005, release: 0.22, secondOscillator: true, secondRatio: 2.01, secondGain: 0.055, secondWaveform: "sine" }
+  };
+
+  return configs[timbre] || configs.triangle;
+}
+
 function midiToFrequency(midi) {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
-function playMidiNote(midi, duration = 0.35, gainValue = 0.16, waveform = "sine") {
+function playMidiNote(midi, duration = 0.35, gainScale = 1) {
   const ctx = getAudioContext();
   const now = ctx.currentTime;
+  const config = getTimbreConfig();
+  const frequency = midiToFrequency(midi);
 
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
+  const mainOsc = ctx.createOscillator();
+  const mainGain = ctx.createGain();
 
-  oscillator.type = waveform;
-  oscillator.frequency.setValueAtTime(midiToFrequency(midi), now);
+  mainOsc.type = config.waveform;
+  mainOsc.frequency.setValueAtTime(frequency, now);
 
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(gainValue, now + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  mainGain.gain.setValueAtTime(0.0001, now);
+  mainGain.gain.exponentialRampToValueAtTime(config.gain * gainScale, now + config.attack);
+  mainGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + config.release);
 
-  oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  mainOsc.connect(mainGain);
+  mainGain.connect(ctx.destination);
 
-  oscillator.start(now);
-  oscillator.stop(now + duration + 0.03);
+  mainOsc.start(now);
+  mainOsc.stop(now + duration + config.release + 0.05);
+
+  if (config.secondOscillator) {
+    const secondOsc = ctx.createOscillator();
+    const secondGain = ctx.createGain();
+
+    secondOsc.type = config.secondWaveform || "sine";
+    secondOsc.frequency.setValueAtTime(frequency * (config.secondRatio || 2), now);
+
+    secondGain.gain.setValueAtTime(0.0001, now);
+    secondGain.gain.exponentialRampToValueAtTime((config.secondGain || 0.04) * gainScale, now + config.attack);
+    secondGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + config.release);
+
+    secondOsc.connect(secondGain);
+    secondGain.connect(ctx.destination);
+
+    secondOsc.start(now);
+    secondOsc.stop(now + duration + config.release + 0.05);
+  }
 }
 
-function playNoteName(note, duration = 0.35, gainValue = 0.16, waveform = "sine") {
+function playNoteName(note, duration = 0.35, gainScale = 1) {
   const midi = noteToMidi(note);
-
   if (midi === null) return;
+  playMidiNote(midi, duration, gainScale);
+}
 
-  playMidiNote(midi, duration, gainValue, waveform);
+function getPlaybackMode() {
+  const select = document.getElementById("playbackModeSelect");
+  return select ? select.value : "both";
 }
 
 function playSelectedNote() {
@@ -173,7 +368,14 @@ function playSelectedNote() {
 
   if (!note) return;
 
-  playNoteName(note, 0.35);
+  playNoteName(note, 0.35, 1);
+}
+
+function previewTimbre() {
+  const counterpoint = getNotesFromTextarea("counterpoint");
+  const cantus = getNotesFromTextarea("cantus");
+  const note = counterpoint[selectedIndex] || cantus[selectedIndex] || "C4";
+  playNoteName(note, 0.3, 1);
 }
 
 function getTempo() {
@@ -199,6 +401,7 @@ function getPlaybackLength() {
 function playVerticalSonority(index) {
   const cantus = getNotesFromTextarea("cantus");
   const counterpoint = getNotesFromTextarea("counterpoint");
+  const mode = getPlaybackMode();
 
   const stepDuration = getStepDurationSeconds();
   const noteDuration = Math.max(0.18, stepDuration * 0.82);
@@ -206,12 +409,12 @@ function playVerticalSonority(index) {
   const cantusNote = cantus[index];
   const counterpointNote = counterpoint[index];
 
-  if (cantusNote) {
-    playNoteName(cantusNote, noteDuration, 0.11, "sine");
+  if ((mode === "both" || mode === "cantus") && cantusNote) {
+    playNoteName(cantusNote, noteDuration, mode === "cantus" ? 1 : 0.72);
   }
 
-  if (counterpointNote) {
-    playNoteName(counterpointNote, noteDuration, 0.16, "triangle");
+  if ((mode === "both" || mode === "counterpoint") && counterpointNote) {
+    playNoteName(counterpointNote, noteDuration, 1);
   }
 }
 
@@ -220,7 +423,7 @@ function updatePlayPauseButton() {
 
   if (!button) return;
 
-  button.textContent = isPlaying ? "停止" : "再生";
+  button.textContent = isPlaying ? t("stop") : t("play");
 }
 
 function togglePlayback() {
@@ -256,6 +459,7 @@ function stopPlayback(resetToStart = false) {
 
   if (resetToStart) {
     playbackIndex = 0;
+    selectedIndex = 0;
   }
 
   updatePlayPauseButton();
@@ -275,12 +479,13 @@ function playCurrentStep() {
   if (playbackIndex >= length) {
     isPlaying = false;
     playbackIndex = 0;
+    selectedIndex = 0;
     updatePlayPauseButton();
     renderScore();
     return;
   }
 
-  selectedIndex = Math.min(playbackIndex, Math.max(0, length - 1));
+  selectedIndex = playbackIndex;
   renderScore();
   playVerticalSonority(playbackIndex);
 
@@ -292,6 +497,7 @@ function playCurrentStep() {
     if (playbackIndex >= length) {
       isPlaying = false;
       playbackIndex = 0;
+      selectedIndex = 0;
       playbackTimerId = null;
       updatePlayPauseButton();
       renderScore();
@@ -310,16 +516,7 @@ function noteToMidi(note) {
   const accidental = match[2] || "";
   const octave = parseInt(match[3], 10);
 
-  const base = {
-    C: 0,
-    D: 2,
-    E: 4,
-    F: 5,
-    G: 7,
-    A: 9,
-    B: 11
-  };
-
+  const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
   let value = base[pitch];
 
   if (accidental === "#") value += 1;
@@ -329,15 +526,8 @@ function noteToMidi(note) {
 }
 
 function midiToNote(midi, preference = "sharp") {
-  const sharpNames = [
-    "C", "C#", "D", "D#", "E", "F",
-    "F#", "G", "G#", "A", "A#", "B"
-  ];
-
-  const flatNames = [
-    "C", "Db", "D", "Eb", "E", "F",
-    "Gb", "G", "Ab", "A", "Bb", "B"
-  ];
+  const sharpNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const flatNames = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
 
   const pitch = ((midi % 12) + 12) % 12;
   const octave = Math.floor(midi / 12) - 1;
@@ -371,26 +561,27 @@ function getSimpleInterval(semitones) {
 function getIntervalName(semitones) {
   const abs = Math.abs(semitones);
   const simple = abs % 12;
+  const intervals = t("intervals");
 
-  if (abs === 0) return "完全1度";
-  if (abs === 12) return "完全8度";
+  if (abs === 0) return intervals.perfectUnison;
+  if (abs === 12) return intervals.perfectOctave;
 
   const names = {
-    0: "完全8度または複合完全音程",
-    1: "短2度",
-    2: "長2度",
-    3: "短3度",
-    4: "長3度",
-    5: "完全4度",
-    6: "増4度 / 減5度",
-    7: "完全5度",
-    8: "短6度",
-    9: "長6度",
-    10: "短7度",
-    11: "長7度"
+    0: intervals.compoundPerfect,
+    1: intervals.m2,
+    2: intervals.M2,
+    3: intervals.m3,
+    4: intervals.M3,
+    5: intervals.P4,
+    6: intervals.tritone,
+    7: intervals.P5,
+    8: intervals.m6,
+    9: intervals.M6,
+    10: intervals.m7,
+    11: intervals.M7
   };
 
-  return names[simple] || "不明な音程";
+  return names[simple] || intervals.unknown;
 }
 
 function isConsonant(semitones) {
@@ -445,14 +636,13 @@ function updateDisplays() {
   if (counterpointDisplay) {
     counterpointDisplay.textContent = counterpoint.length
       ? counterpoint.join(" ")
-      : "未入力";
+      : t("noInput");
   }
 
   if (scoreStatus) {
     const length = getPlaybackLength();
     const displayIndex = length ? Math.min(playbackIndex + 1, length) : 0;
-    scoreStatus.textContent =
-      `対旋律：${counterpoint.length}音 / 定旋律：${cantus.length}音 / 再生位置：${displayIndex}/${length}`;
+    scoreStatus.textContent = t("status")(counterpoint.length, cantus.length, displayIndex, length);
   }
 }
 
@@ -471,9 +661,9 @@ function renderResults(results) {
 
   resultBox.innerHTML = results
     .map((item) => {
-      let label = "OK";
-      if (item.type === "warn") label = "注意";
-      if (item.type === "error") label = "禁止";
+      let label = t("labelOk");
+      if (item.type === "warn") label = t("labelWarn");
+      if (item.type === "error") label = t("labelError");
 
       return `
         <div class="result-item ${item.type}">
@@ -489,18 +679,19 @@ function renderSummary(errorCount, warnCount, okCount) {
   const summary = document.getElementById("summary");
   if (!summary) return;
 
+  summary.removeAttribute("data-i18n");
+
   if (errorCount === 0 && warnCount === 0) {
-    summary.innerHTML = `大きな問題は見つかりませんでした。OK項目：${okCount}件`;
+    summary.innerHTML = t("summaryOk")(okCount);
     return;
   }
 
-  summary.innerHTML = `禁止：${errorCount}件 / 注意：${warnCount}件 / OK：${okCount}件`;
+  summary.innerHTML = t("summaryCounts")(errorCount, warnCount, okCount);
 }
 
 function analyzeCounterpoint() {
   const cantus = getNotesFromTextarea("cantus");
   const counterpoint = getNotesFromTextarea("counterpoint");
-
   const results = [];
 
   let errorCount = 0;
@@ -508,26 +699,21 @@ function analyzeCounterpoint() {
   let okCount = 0;
 
   if (cantus.length === 0 || counterpoint.length === 0) {
-    addResult(results, "error", "定旋律と対旋律を入力してください。");
+    addResult(results, "error", t("needInput"));
     renderSummary(1, 0, 0);
     renderResults(results);
     return;
   }
 
   if (cantus.length !== counterpoint.length) {
-    addResult(
-      results,
-      "error",
-      `音数が一致していません。定旋律は${cantus.length}音、対旋律は${counterpoint.length}音です。`
-    );
+    addResult(results, "error", t("lengthMismatch")(cantus.length, counterpoint.length));
     errorCount++;
   } else {
-    addResult(results, "ok", `音数は一致しています。全${cantus.length}音です。`);
+    addResult(results, "ok", t("lengthOk")(cantus.length));
     okCount++;
   }
 
   const length = Math.min(cantus.length, counterpoint.length);
-
   const cantusMidi = [];
   const counterMidi = [];
 
@@ -539,11 +725,7 @@ function analyzeCounterpoint() {
     counterMidi.push(cpMidi);
 
     if (cMidi === null || cpMidi === null) {
-      addResult(
-        results,
-        "error",
-        `${i + 1}音目：音名の形式が正しくありません。例：C4, F#4, Bb3`
-      );
+      addResult(results, "error", t("invalidNote")(i + 1));
       errorCount++;
       continue;
     }
@@ -552,18 +734,10 @@ function analyzeCounterpoint() {
     const intervalName = getIntervalName(interval);
 
     if (isConsonant(interval)) {
-      addResult(
-        results,
-        "ok",
-        `${i + 1}音目：${cantus[i]} - ${counterpoint[i]} は ${intervalName} です。`
-      );
+      addResult(results, "ok", t("intervalOk")(i + 1, cantus[i], counterpoint[i], intervalName));
       okCount++;
     } else {
-      addResult(
-        results,
-        "error",
-        `${i + 1}音目：${cantus[i]} - ${counterpoint[i]} は ${intervalName} です。第一種対位法では不協和音程です。`
-      );
+      addResult(results, "error", t("intervalBad")(i + 1, cantus[i], counterpoint[i], intervalName));
       errorCount++;
     }
   }
@@ -576,34 +750,22 @@ function analyzeCounterpoint() {
       getSimpleInterval(firstInterval) === 7 ||
       getSimpleInterval(firstInterval) === 0
     ) {
-      addResult(results, "ok", `開始音程は ${getIntervalName(firstInterval)} です。`);
+      addResult(results, "ok", t("startOk")(getIntervalName(firstInterval)));
       okCount++;
     } else {
-      addResult(
-        results,
-        "error",
-        `開始音程は ${getIntervalName(firstInterval)} です。第一種では完全1度・完全5度・完全8度で始めるのが基本です。`
-      );
+      addResult(results, "error", t("startBad")(getIntervalName(firstInterval)));
       errorCount++;
     }
   }
 
-  if (
-    length > 0 &&
-    cantusMidi[length - 1] !== null &&
-    counterMidi[length - 1] !== null
-  ) {
+  if (length > 0 && cantusMidi[length - 1] !== null && counterMidi[length - 1] !== null) {
     const lastInterval = counterMidi[length - 1] - cantusMidi[length - 1];
 
     if (Math.abs(lastInterval) === 0 || getSimpleInterval(lastInterval) === 0) {
-      addResult(results, "ok", `終止音程は ${getIntervalName(lastInterval)} です。`);
+      addResult(results, "ok", t("endOk")(getIntervalName(lastInterval)));
       okCount++;
     } else {
-      addResult(
-        results,
-        "error",
-        `終止音程は ${getIntervalName(lastInterval)} です。第一種では完全1度または完全8度で終止するのが基本です。`
-      );
+      addResult(results, "error", t("endBad")(getIntervalName(lastInterval)));
       errorCount++;
     }
   }
@@ -625,23 +787,13 @@ function analyzeCounterpoint() {
     const bothMove = cDir !== 0 && cpDir !== 0;
     const sameDirection = cDir === cpDir;
 
-    if (
-      bothMove &&
-      sameDirection &&
-      isPerfectFifth(interval1) &&
-      isPerfectFifth(interval2)
-    ) {
-      addResult(results, "error", `${i + 1}音目 → ${i + 2}音目：連続5度があります。`);
+    if (bothMove && sameDirection && isPerfectFifth(interval1) && isPerfectFifth(interval2)) {
+      addResult(results, "error", t("parallelFifth")(i + 1));
       errorCount++;
     }
 
-    if (
-      bothMove &&
-      sameDirection &&
-      isPerfectOctaveOrUnison(interval1) &&
-      isPerfectOctaveOrUnison(interval2)
-    ) {
-      addResult(results, "error", `${i + 1}音目 → ${i + 2}音目：連続8度または連続1度があります。`);
+    if (bothMove && sameDirection && isPerfectOctaveOrUnison(interval1) && isPerfectOctaveOrUnison(interval2)) {
+      addResult(results, "error", t("parallelOctave")(i + 1));
       errorCount++;
     }
   }
@@ -702,10 +854,7 @@ function getScorePositions(noteCount) {
   const count = Math.max(noteCount, 1);
   const spacing = usableWidth / count;
 
-  return Array.from(
-    { length: count },
-    (_, i) => SCORE.left + spacing * i + spacing / 2
-  );
+  return Array.from({ length: count }, (_, i) => SCORE.left + spacing * i + spacing / 2);
 }
 
 function moveNoteChromatic(note, semitone) {
@@ -716,6 +865,7 @@ function moveNoteChromatic(note, semitone) {
   return midiToNote(midi + semitone, preference);
 }
 
+/* Editing selection must not move playbackIndex. */
 function moveSelectedNote(semitone) {
   if (isPlaying) return;
 
@@ -743,8 +893,30 @@ function moveSelectedNote(semitone) {
 
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
+  playNoteName(counterpoint[selectedIndex], 0.25, 1);
+}
 
-  playNoteName(counterpoint[selectedIndex], 0.25);
+/* Left/right changes selectedIndex only. The red playhead stays at playbackIndex. */
+function moveSelection(delta) {
+  if (isPlaying) return;
+
+  const length = getPlaybackLength();
+
+  if (!length) return;
+
+  selectedIndex += delta;
+
+  if (selectedIndex < 0) selectedIndex = length - 1;
+  if (selectedIndex >= length) selectedIndex = 0;
+
+  renderScore();
+
+  const counterpoint = getNotesFromTextarea("counterpoint");
+  const note = counterpoint[selectedIndex];
+
+  if (note) {
+    playNoteName(note, 0.18, 0.8);
+  }
 }
 
 function deleteSelectedNote() {
@@ -760,7 +932,6 @@ function deleteSelectedNote() {
   }
 
   counterpoint[selectedIndex] = "";
-
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
 }
@@ -771,66 +942,27 @@ function drawStaff(svg, noteCount) {
 
   for (let i = 0; i < 5; i++) {
     const y = SCORE.bottomLineY - i * SCORE.staffGap;
-
-    svg.appendChild(
-      createSvgElement("line", {
-        x1: startX,
-        y1: y,
-        x2: endX,
-        y2: y,
-        class: "staff-line"
-      })
-    );
+    svg.appendChild(createSvgElement("line", { x1: startX, y1: y, x2: endX, y2: y, class: "staff-line" }));
   }
 
-  svg.appendChild(
-    createSvgElement("text", {
-      x: 22,
-      y: SCORE.bottomLineY - 25,
-      class: "voice-label"
-    })
-  ).textContent = "Counterpoint";
-
-  svg.appendChild(
-    createSvgElement("text", {
-      x: 22,
-      y: SCORE.bottomLineY + 58,
-      class: "voice-label"
-    })
-  ).textContent = "Cantus";
+  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY - 25, class: "voice-label" })).textContent = "Counterpoint";
+  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY + 58, class: "voice-label" })).textContent = "Cantus";
 
   const positions = getScorePositions(noteCount);
 
   positions.forEach((x, i) => {
-    svg.appendChild(
-      createSvgElement("circle", {
-        cx: x,
-        cy: SCORE.bottomLineY + 65,
-        r: 2.8,
-        class: "slot-marker"
-      })
-    );
-
-    svg.appendChild(
-      createSvgElement("text", {
-        x: x - 4,
-        y: SCORE.bottomLineY + 92,
-        class: "note-label"
-      })
-    ).textContent = i + 1;
+    svg.appendChild(createSvgElement("circle", { cx: x, cy: SCORE.bottomLineY + 65, r: 2.8, class: "slot-marker" }));
+    svg.appendChild(createSvgElement("text", { x: x - 4, y: SCORE.bottomLineY + 92, class: "note-label" })).textContent = i + 1;
 
     if (i > 0) {
       const midX = (positions[i - 1] + x) / 2;
-
-      svg.appendChild(
-        createSvgElement("line", {
-          x1: midX,
-          y1: SCORE.bottomLineY - 52,
-          x2: midX,
-          y2: SCORE.bottomLineY + 78,
-          class: "measure-line"
-        })
-      );
+      svg.appendChild(createSvgElement("line", {
+        x1: midX,
+        y1: SCORE.bottomLineY - 52,
+        x2: midX,
+        y2: SCORE.bottomLineY + 78,
+        class: "measure-line"
+      }));
     }
   });
 }
@@ -841,26 +973,22 @@ function drawPlayhead(svg, positions, noteCount) {
   const safeIndex = Math.min(playbackIndex, noteCount - 1);
   const x = positions[safeIndex];
 
-  svg.appendChild(
-    createSvgElement("rect", {
-      x: x - 20,
-      y: SCORE.playheadTop,
-      width: 40,
-      height: SCORE.playheadBottom - SCORE.playheadTop,
-      rx: 10,
-      class: "playhead-halo"
-    })
-  );
+  svg.appendChild(createSvgElement("rect", {
+    x: x - 20,
+    y: SCORE.playheadTop,
+    width: 40,
+    height: SCORE.playheadBottom - SCORE.playheadTop,
+    rx: 10,
+    class: "playhead-halo"
+  }));
 
-  svg.appendChild(
-    createSvgElement("line", {
-      x1: x,
-      y1: SCORE.playheadTop,
-      x2: x,
-      y2: SCORE.playheadBottom,
-      class: "playhead-line"
-    })
-  );
+  svg.appendChild(createSvgElement("line", {
+    x1: x,
+    y1: SCORE.playheadTop,
+    x2: x,
+    y2: SCORE.playheadBottom,
+    class: "playhead-line"
+  }));
 }
 
 function drawLedgerLines(svg, x, y) {
@@ -868,38 +996,14 @@ function drawLedgerLines(svg, x, y) {
   const bottomLineY = SCORE.bottomLineY;
 
   if (y < topLineY - SCORE.noteStep) {
-    for (
-      let ly = topLineY - 2 * SCORE.noteStep;
-      ly >= y - 1;
-      ly -= 2 * SCORE.noteStep
-    ) {
-      svg.appendChild(
-        createSvgElement("line", {
-          x1: x - 14,
-          y1: ly,
-          x2: x + 14,
-          y2: ly,
-          class: "ledger-line"
-        })
-      );
+    for (let ly = topLineY - 2 * SCORE.noteStep; ly >= y - 1; ly -= 2 * SCORE.noteStep) {
+      svg.appendChild(createSvgElement("line", { x1: x - 14, y1: ly, x2: x + 14, y2: ly, class: "ledger-line" }));
     }
   }
 
   if (y > bottomLineY + SCORE.noteStep) {
-    for (
-      let ly = bottomLineY + 2 * SCORE.noteStep;
-      ly <= y + 1;
-      ly += 2 * SCORE.noteStep
-    ) {
-      svg.appendChild(
-        createSvgElement("line", {
-          x1: x - 14,
-          y1: ly,
-          x2: x + 14,
-          y2: ly,
-          class: "ledger-line"
-        })
-      );
+    for (let ly = bottomLineY + 2 * SCORE.noteStep; ly <= y + 1; ly += 2 * SCORE.noteStep) {
+      svg.appendChild(createSvgElement("line", { x1: x - 14, y1: ly, x2: x + 14, y2: ly, class: "ledger-line" }));
     }
   }
 }
@@ -909,13 +1013,11 @@ function drawAccidental(svg, parsed, x, y, isCantus, isSelected, isCurrentPlayba
 
   const symbol = parsed.accidental === "#" ? "♯" : "♭";
 
-  svg.appendChild(
-    createSvgElement("text", {
-      x: x - 30,
-      y: y + 1,
-      class: `accidental${isCantus ? " cantus" : ""}${isSelected ? " selected" : ""}${isCurrentPlayback ? " playing" : ""}`
-    })
-  ).textContent = symbol;
+  svg.appendChild(createSvgElement("text", {
+    x: x - 30,
+    y: y + 1,
+    class: `accidental${isCantus ? " cantus" : ""}${isSelected ? " selected" : ""}${isCurrentPlayback ? " playing" : ""}`
+  })).textContent = symbol;
 }
 
 function drawNote(svg, note, x, voice, index) {
@@ -926,7 +1028,7 @@ function drawNote(svg, note, x, voice, index) {
 
   const isCantus = voice === "cantus";
   const isSelected = !isCantus && index === selectedIndex && !isPlaying;
-  const isCurrentPlayback = index === playbackIndex && (isPlaying || getPlaybackLength() > 0);
+  const isCurrentPlayback = index === playbackIndex && isPlaying;
 
   const xOffset = isCantus ? -7 : 7;
   const noteX = x + xOffset;
@@ -934,62 +1036,40 @@ function drawNote(svg, note, x, voice, index) {
   drawLedgerLines(svg, noteX, y);
   drawAccidental(svg, parsed, noteX, y, isCantus, isSelected, isCurrentPlayback);
 
-  svg.appendChild(
-    createSvgElement("ellipse", {
-      cx: noteX,
-      cy: y,
-      rx: 8.5,
-      ry: 5.8,
-      transform: `rotate(-18 ${noteX} ${y})`,
-      class: isCantus
-        ? isCurrentPlayback
-          ? "note-head cantus playing"
-          : "note-head cantus"
-        : isCurrentPlayback
-          ? "note-head playing"
-          : isSelected
-            ? "note-head selected"
-            : "note-head"
-    })
-  );
+  svg.appendChild(createSvgElement("ellipse", {
+    cx: noteX,
+    cy: y,
+    rx: 8.5,
+    ry: 5.8,
+    transform: `rotate(-18 ${noteX} ${y})`,
+    class: isCantus
+      ? isCurrentPlayback ? "note-head cantus playing" : "note-head cantus"
+      : isCurrentPlayback ? "note-head playing" : isSelected ? "note-head selected" : "note-head"
+  }));
 
   if (isCantus) {
-    svg.appendChild(
-      createSvgElement("line", {
-        x1: noteX - 7,
-        y1: y,
-        x2: noteX - 7,
-        y2: y + 34,
-        class: isCurrentPlayback ? "note-stem cantus playing" : "note-stem cantus"
-      })
-    );
+    svg.appendChild(createSvgElement("line", {
+      x1: noteX - 7,
+      y1: y,
+      x2: noteX - 7,
+      y2: y + 34,
+      class: isCurrentPlayback ? "note-stem cantus playing" : "note-stem cantus"
+    }));
   } else {
-    svg.appendChild(
-      createSvgElement("line", {
-        x1: noteX + 7,
-        y1: y,
-        x2: noteX + 7,
-        y2: y - 34,
-        class: isCurrentPlayback
-          ? "note-stem playing"
-          : isSelected
-            ? "note-stem selected"
-            : "note-stem"
-      })
-    );
+    svg.appendChild(createSvgElement("line", {
+      x1: noteX + 7,
+      y1: y,
+      x2: noteX + 7,
+      y2: y - 34,
+      class: isCurrentPlayback ? "note-stem playing" : isSelected ? "note-stem selected" : "note-stem"
+    }));
   }
 
-  svg.appendChild(
-    createSvgElement("text", {
-      x: noteX - 12,
-      y: isCantus ? SCORE.bottomLineY + 52 : SCORE.bottomLineY - 72,
-      class: isCurrentPlayback
-        ? "note-label playing"
-        : isSelected
-          ? "note-label selected"
-          : "note-label"
-    })
-  ).textContent = note;
+  svg.appendChild(createSvgElement("text", {
+    x: noteX - 12,
+    y: isCantus ? SCORE.bottomLineY + 52 : SCORE.bottomLineY - 72,
+    class: isCurrentPlayback ? "note-label playing" : isSelected ? "note-label selected" : "note-label"
+  })).textContent = note;
 }
 
 function renderScore() {
@@ -1005,16 +1085,13 @@ function renderScore() {
 
   if (selectedIndex >= noteCount) selectedIndex = noteCount - 1;
   if (selectedIndex < 0) selectedIndex = 0;
-
   if (playbackIndex >= noteCount) playbackIndex = 0;
   if (playbackIndex < 0) playbackIndex = 0;
 
   drawStaff(svg, noteCount);
   drawPlayhead(svg, positions, noteCount);
 
-  cantus.forEach((note, i) => {
-    drawNote(svg, note, positions[i], "cantus", i);
-  });
+  cantus.forEach((note, i) => drawNote(svg, note, positions[i], "cantus", i));
 
   counterpoint.forEach((note, i) => {
     if (note) {
@@ -1025,6 +1102,7 @@ function renderScore() {
   updateDisplays();
 }
 
+/* Clicking edits/selects a note only. It does not move the red playhead. */
 function handleScoreClick(event) {
   if (isPlaying) return;
 
@@ -1061,13 +1139,11 @@ function handleScoreClick(event) {
   }
 
   selectedIndex = nearestIndex;
-  playbackIndex = nearestIndex;
   counterpoint[nearestIndex] = clickedNote;
 
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
-
-  playNoteName(clickedNote, 0.35);
+  playNoteName(clickedNote, 0.35, 1);
 
   svg.focus();
 }
@@ -1076,16 +1152,10 @@ function undoCounterpointNote() {
   if (isPlaying) return;
 
   const counterpoint = getNotesFromTextarea("counterpoint");
-
   counterpoint.pop();
 
-  if (selectedIndex >= counterpoint.length) {
-    selectedIndex = Math.max(0, counterpoint.length - 1);
-  }
-
-  if (playbackIndex >= counterpoint.length) {
-    playbackIndex = Math.max(0, counterpoint.length - 1);
-  }
+  if (selectedIndex >= counterpoint.length) selectedIndex = Math.max(0, counterpoint.length - 1);
+  if (playbackIndex >= counterpoint.length) playbackIndex = Math.max(0, counterpoint.length - 1);
 
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
@@ -1096,6 +1166,58 @@ function clearCounterpoint() {
   selectedIndex = 0;
   playbackIndex = 0;
   setNotesToTextarea("counterpoint", []);
+  renderScore();
+}
+
+function populateExerciseSelect(keepValue = false) {
+  const select = document.getElementById("exerciseSelect");
+  if (!select) return;
+
+  const previousValue = select.value;
+  select.innerHTML = "";
+
+  EXERCISES.forEach((exercise, index) => {
+    const option = document.createElement("option");
+    option.value = exercise.id;
+    option.textContent = exercise.title[currentLanguage] || exercise.title.ja;
+
+    if ((keepValue && previousValue === exercise.id) || (!keepValue && index === 0)) {
+      option.selected = true;
+    }
+
+    select.appendChild(option);
+  });
+
+  updateExerciseDescription();
+}
+
+function getSelectedExercise() {
+  const select = document.getElementById("exerciseSelect");
+  if (!select) return EXERCISES[0];
+
+  return EXERCISES.find((exercise) => exercise.id === select.value) || EXERCISES[0];
+}
+
+function updateExerciseDescription() {
+  const description = document.getElementById("exerciseDescription");
+  const exercise = getSelectedExercise();
+
+  if (!description || !exercise) return;
+
+  description.textContent = exercise.description[currentLanguage] || exercise.description.ja;
+}
+
+function loadSelectedExercise() {
+  const exercise = getSelectedExercise();
+
+  if (!exercise) return;
+
+  stopPlayback(true);
+  setNotesToTextarea("cantus", exercise.cantus);
+  setNotesToTextarea("counterpoint", exercise.counterpoint || []);
+
+  selectedIndex = 0;
+  playbackIndex = 0;
   renderScore();
 }
 
@@ -1110,89 +1232,6 @@ function setExample() {
   loadSelectedExercise();
 }
 
-
-function populateExerciseSelect() {
-  const select = document.getElementById("exerciseSelect");
-  if (!select) return;
-
-  select.innerHTML = "";
-
-  EXERCISES.forEach((exercise, index) => {
-    const option = document.createElement("option");
-    option.value = exercise.id;
-    option.textContent = exercise.title;
-
-    if (index === 0) {
-      option.selected = true;
-    }
-
-    select.appendChild(option);
-  });
-
-  updateExerciseDescription();
-}
-
-function getSelectedExercise() {
-  const select = document.getElementById("exerciseSelect");
-
-  if (!select) return EXERCISES[0];
-
-  return EXERCISES.find((exercise) => exercise.id === select.value) || EXERCISES[0];
-}
-
-function updateExerciseDescription() {
-  const description = document.getElementById("exerciseDescription");
-  const exercise = getSelectedExercise();
-
-  if (!description || !exercise) return;
-
-  description.textContent = exercise.description;
-}
-
-function loadSelectedExercise() {
-  const exercise = getSelectedExercise();
-
-  if (!exercise) return;
-
-  stopPlayback(true);
-
-  setNotesToTextarea("cantus", exercise.cantus);
-  setNotesToTextarea("counterpoint", exercise.counterpoint || []);
-
-  selectedIndex = 0;
-  playbackIndex = 0;
-  renderScore();
-}
-
-function moveSelection(delta) {
-  if (isPlaying) return;
-
-  const length = getPlaybackLength();
-
-  if (!length) return;
-
-  selectedIndex += delta;
-
-  if (selectedIndex < 0) {
-    selectedIndex = length - 1;
-  }
-
-  if (selectedIndex >= length) {
-    selectedIndex = 0;
-  }
-
-  playbackIndex = selectedIndex;
-  renderScore();
-
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const note = counterpoint[selectedIndex];
-
-  if (note) {
-    playNoteName(note, 0.18);
-  }
-}
-
-
 window.addEventListener("DOMContentLoaded", () => {
   const svg = document.getElementById("scoreEditor");
 
@@ -1202,10 +1241,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("keydown", (event) => {
     const activeTag = document.activeElement?.tagName?.toLowerCase();
-
-    if (activeTag === "textarea" || activeTag === "input") {
-      return;
-    }
+    const isTextInput = activeTag === "textarea" || activeTag === "input" || activeTag === "select";
 
     if (event.code === "Space") {
       event.preventDefault();
@@ -1213,39 +1249,53 @@ window.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (isTextInput) {
+      return;
+    }
+
     if (event.key === "ArrowRight") {
       event.preventDefault();
       moveSelection(1);
+      return;
     }
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
       moveSelection(-1);
+      return;
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
       moveSelectedNote(1);
+      return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
       moveSelectedNote(-1);
+      return;
     }
 
     if (event.key === "Backspace" || event.key === "Delete") {
       event.preventDefault();
       deleteSelectedNote();
+      return;
     }
   });
 
   const exerciseSelect = document.getElementById("exerciseSelect");
-
   if (exerciseSelect) {
     exerciseSelect.addEventListener("change", updateExerciseDescription);
   }
 
+  const languageSelect = document.getElementById("languageSelect");
+  if (languageSelect) {
+    languageSelect.value = currentLanguage;
+  }
+
   populateExerciseSelect();
+  setLanguage(currentLanguage);
   renderScore();
   updatePlayPauseButton();
 });

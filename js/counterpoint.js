@@ -1,3 +1,19 @@
+const NATURAL_NOTES = [
+  "C4", "D4", "E4", "F4", "G4", "A4", "B4",
+  "C5", "D5", "E5", "F5", "G5", "A5", "B5",
+  "C6"
+];
+
+const NOTE_LETTER_STEPS = {
+  C: 0,
+  D: 1,
+  E: 2,
+  F: 3,
+  G: 4,
+  A: 5,
+  B: 6
+};
+
 function noteToMidi(note) {
   const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
 
@@ -30,6 +46,30 @@ function noteToMidi(note) {
   }
 
   return 12 * (octave + 1) + value;
+}
+
+function parseNote(note) {
+  const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    letter: match[1].toUpperCase(),
+    accidental: match[2] || "",
+    octave: parseInt(match[3], 10)
+  };
+}
+
+function getDiatonicStep(note) {
+  const parsed = parseNote(note);
+
+  if (!parsed) {
+    return null;
+  }
+
+  return parsed.octave * 7 + NOTE_LETTER_STEPS[parsed.letter];
 }
 
 function getSimpleInterval(semitones) {
@@ -68,7 +108,6 @@ function getIntervalName(semitones) {
 
 function isConsonant(semitones) {
   const simple = getSimpleInterval(semitones);
-
   return [0, 3, 4, 7, 8, 9].includes(simple);
 }
 
@@ -85,6 +124,16 @@ function direction(a, b) {
   if (b > a) return 1;
   if (b < a) return -1;
   return 0;
+}
+
+function getNotesFromTextarea(id) {
+  const value = document.getElementById(id).value.trim();
+  if (!value) return [];
+  return value.split(/\s+/).filter(Boolean);
+}
+
+function setNotesToTextarea(id, notes) {
+  document.getElementById(id).value = notes.filter(Boolean).join(" ");
 }
 
 function addResult(results, type, message) {
@@ -138,11 +187,8 @@ function renderSummary(errorCount, warnCount, okCount) {
 }
 
 function analyzeCounterpoint() {
-  const cantusInput = document.getElementById("cantus").value.trim();
-  const counterInput = document.getElementById("counterpoint").value.trim();
-
-  const cantus = cantusInput.split(/\s+/).filter(Boolean);
-  const counterpoint = counterInput.split(/\s+/).filter(Boolean);
+  const cantus = getNotesFromTextarea("cantus");
+  const counterpoint = getNotesFromTextarea("counterpoint");
 
   const results = [];
 
@@ -318,4 +364,342 @@ function analyzeCounterpoint() {
 
   renderSummary(errorCount, warnCount, okCount);
   renderResults(results);
+  renderScore();
 }
+
+/* =========================
+   SVG SCORE EDITOR
+========================= */
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const SCORE = {
+  width: 960,
+  height: 260,
+  left: 90,
+  right: 40,
+  top: 55,
+  staffGap: 10,
+  bottomLineY: 125,
+  noteStep: 5,
+  minNote: "C4",
+  maxNote: "C6"
+};
+
+function createSvgElement(tag, attrs = {}) {
+  const el = document.createElementNS(SVG_NS, tag);
+
+  Object.entries(attrs).forEach(([key, value]) => {
+    el.setAttribute(key, value);
+  });
+
+  return el;
+}
+
+function clearSvg(svg) {
+  while (svg.firstChild) {
+    svg.removeChild(svg.firstChild);
+  }
+}
+
+function noteToY(note) {
+  const noteStep = getDiatonicStep(note);
+  const e4Step = getDiatonicStep("E4");
+
+  if (noteStep === null || e4Step === null) {
+    return null;
+  }
+
+  return SCORE.bottomLineY - (noteStep - e4Step) * SCORE.noteStep;
+}
+
+function yToNaturalNote(y) {
+  const e4Step = getDiatonicStep("E4");
+  const rawStep = Math.round((SCORE.bottomLineY - y) / SCORE.noteStep);
+  const targetStep = e4Step + rawStep;
+
+  let closest = NATURAL_NOTES[0];
+  let closestDistance = Infinity;
+
+  NATURAL_NOTES.forEach((note) => {
+    const step = getDiatonicStep(note);
+    const distance = Math.abs(step - targetStep);
+
+    if (distance < closestDistance) {
+      closest = note;
+      closestDistance = distance;
+    }
+  });
+
+  return closest;
+}
+
+function getScorePositions(noteCount) {
+  const usableWidth = SCORE.width - SCORE.left - SCORE.right;
+  const count = Math.max(noteCount, 1);
+  const spacing = usableWidth / count;
+
+  return Array.from({ length: count }, (_, i) => SCORE.left + spacing * i + spacing / 2);
+}
+
+function drawStaff(svg, noteCount) {
+  const startX = SCORE.left - 24;
+  const endX = SCORE.width - SCORE.right + 10;
+
+  for (let i = 0; i < 5; i++) {
+    const y = SCORE.bottomLineY - i * SCORE.staffGap;
+    svg.appendChild(
+      createSvgElement("line", {
+        x1: startX,
+        y1: y,
+        x2: endX,
+        y2: y,
+        class: "staff-line"
+      })
+    );
+  }
+
+  svg.appendChild(
+    createSvgElement("text", {
+      x: 22,
+      y: SCORE.bottomLineY - 22,
+      class: "voice-label"
+    })
+  ).textContent = "Counterpoint";
+
+  svg.appendChild(
+    createSvgElement("text", {
+      x: 22,
+      y: SCORE.bottomLineY + 48,
+      class: "voice-label"
+    })
+  ).textContent = "Cantus";
+
+  const positions = getScorePositions(noteCount);
+
+  positions.forEach((x, i) => {
+    svg.appendChild(
+      createSvgElement("circle", {
+        cx: x,
+        cy: SCORE.bottomLineY + 54,
+        r: 2.8,
+        class: "slot-marker"
+      })
+    );
+
+    svg.appendChild(
+      createSvgElement("text", {
+        x: x - 4,
+        y: SCORE.bottomLineY + 78,
+        class: "note-label"
+      })
+    ).textContent = i + 1;
+
+    if (i > 0) {
+      const midX = (positions[i - 1] + x) / 2;
+      svg.appendChild(
+        createSvgElement("line", {
+          x1: midX,
+          y1: SCORE.bottomLineY - 42,
+          x2: midX,
+          y2: SCORE.bottomLineY + 66,
+          class: "measure-line"
+        })
+      );
+    }
+  });
+}
+
+function drawLedgerLines(svg, x, y) {
+  const topLineY = SCORE.bottomLineY - 4 * SCORE.staffGap;
+  const bottomLineY = SCORE.bottomLineY;
+
+  if (y < topLineY - SCORE.noteStep) {
+    for (let ly = topLineY - 2 * SCORE.noteStep; ly >= y - 1; ly -= 2 * SCORE.noteStep) {
+      svg.appendChild(
+        createSvgElement("line", {
+          x1: x - 14,
+          y1: ly,
+          x2: x + 14,
+          y2: ly,
+          class: "ledger-line"
+        })
+      );
+    }
+  }
+
+  if (y > bottomLineY + SCORE.noteStep) {
+    for (let ly = bottomLineY + 2 * SCORE.noteStep; ly <= y + 1; ly += 2 * SCORE.noteStep) {
+      svg.appendChild(
+        createSvgElement("line", {
+          x1: x - 14,
+          y1: ly,
+          x2: x + 14,
+          y2: ly,
+          class: "ledger-line"
+        })
+      );
+    }
+  }
+}
+
+function drawNote(svg, note, x, voice) {
+  const y = noteToY(note);
+  const parsed = parseNote(note);
+
+  if (y === null || !parsed) {
+    return;
+  }
+
+  const isCantus = voice === "cantus";
+  const xOffset = isCantus ? -7 : 7;
+  const noteX = x + xOffset;
+
+  drawLedgerLines(svg, noteX, y);
+
+  if (parsed.accidental) {
+    svg.appendChild(
+      createSvgElement("text", {
+        x: noteX - 28,
+        y: y + 6,
+        class: "accidental"
+      })
+    ).textContent = parsed.accidental === "#" ? "♯" : "♭";
+  }
+
+  const head = createSvgElement("ellipse", {
+    cx: noteX,
+    cy: y,
+    rx: 8.5,
+    ry: 5.8,
+    transform: `rotate(-18 ${noteX} ${y})`,
+    class: isCantus ? "note-head cantus" : "note-head"
+  });
+
+  svg.appendChild(head);
+
+  if (isCantus) {
+    svg.appendChild(
+      createSvgElement("line", {
+        x1: noteX - 7,
+        y1: y,
+        x2: noteX - 7,
+        y2: y + 34,
+        class: "note-stem cantus"
+      })
+    );
+  } else {
+    svg.appendChild(
+      createSvgElement("line", {
+        x1: noteX + 7,
+        y1: y,
+        x2: noteX + 7,
+        y2: y - 34,
+        class: "note-stem"
+      })
+    );
+  }
+
+  svg.appendChild(
+    createSvgElement("text", {
+      x: noteX - 12,
+      y: isCantus ? SCORE.bottomLineY + 42 : SCORE.bottomLineY - 62,
+      class: "note-label"
+    })
+  ).textContent = note;
+}
+
+function renderScore() {
+  const svg = document.getElementById("scoreEditor");
+
+  if (!svg) {
+    return;
+  }
+
+  clearSvg(svg);
+
+  const cantus = getNotesFromTextarea("cantus");
+  const counterpoint = getNotesFromTextarea("counterpoint");
+  const noteCount = Math.max(cantus.length, counterpoint.length, 1);
+  const positions = getScorePositions(noteCount);
+
+  drawStaff(svg, noteCount);
+
+  cantus.forEach((note, i) => {
+    drawNote(svg, note, positions[i], "cantus");
+  });
+
+  counterpoint.forEach((note, i) => {
+    drawNote(svg, note, positions[i], "counterpoint");
+  });
+}
+
+function handleScoreClick(event) {
+  const svg = document.getElementById("scoreEditor");
+  const rect = svg.getBoundingClientRect();
+
+  const viewX = ((event.clientX - rect.left) / rect.width) * SCORE.width;
+  const viewY = ((event.clientY - rect.top) / rect.height) * SCORE.height;
+
+  const cantus = getNotesFromTextarea("cantus");
+  let counterpoint = getNotesFromTextarea("counterpoint");
+
+  const noteCount = Math.max(cantus.length, 1);
+  const positions = getScorePositions(noteCount);
+
+  let nearestIndex = 0;
+  let nearestDistance = Infinity;
+
+  positions.forEach((x, i) => {
+    const distance = Math.abs(x - viewX);
+
+    if (distance < nearestDistance) {
+      nearestIndex = i;
+      nearestDistance = distance;
+    }
+  });
+
+  const clickedNote = yToNaturalNote(viewY);
+
+  while (counterpoint.length < noteCount) {
+    counterpoint.push("");
+  }
+
+  counterpoint[nearestIndex] = clickedNote;
+
+  setNotesToTextarea("counterpoint", counterpoint);
+  renderScore();
+}
+
+function undoCounterpointNote() {
+  const counterpoint = getNotesFromTextarea("counterpoint");
+  counterpoint.pop();
+  setNotesToTextarea("counterpoint", counterpoint);
+  renderScore();
+}
+
+function clearCounterpoint() {
+  document.getElementById("counterpoint").value = "";
+  renderScore();
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const svg = document.getElementById("scoreEditor");
+
+  if (svg) {
+    svg.addEventListener("click", handleScoreClick);
+  }
+
+  const cantus = document.getElementById("cantus");
+  const counterpoint = document.getElementById("counterpoint");
+
+  if (cantus) {
+    cantus.addEventListener("input", renderScore);
+  }
+
+  if (counterpoint) {
+    counterpoint.addEventListener("input", renderScore);
+  }
+
+  renderScore();
+});

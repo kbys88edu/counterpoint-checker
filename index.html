@@ -4,55 +4,401 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>2声対位法トレーナー｜Atelier Composition Son</title>
-  <meta name="description" content="第一種2声対位法を学習するためのオンライン練習ページです。" />
+  <title>Counterpoint Tools｜Atelier Composition Son</title>
+  <meta name="description" content="第一種2声・3声対位法を練習するためのオンラインチェッカーです。" />
 
-  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --text: #181818;
+      --muted: #666666;
+      --line: rgba(0, 0, 0, 0.14);
+      --card: rgba(255, 255, 255, 0.72);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        "Yu Gothic",
+        "YuGothic",
+        "Hiragino Sans",
+        "Hiragino Kaku Gothic ProN",
+        Meiryo,
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .page {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 64px 0 88px;
+    }
+
+    .header {
+      padding: 48px 0 44px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .home-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .language-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.65);
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .language-control select {
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 7vw, 5.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.07em;
+      max-width: 900px;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .sublead {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--card);
+      text-decoration: none;
+      color: var(--text);
+      transition:
+        transform 0.18s ease,
+        background 0.18s ease,
+        border-color 0.18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .arrow {
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--muted);
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.055em;
+    }
+
+    .card p {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 28px;
+    }
+
+    .feature {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .footer {
+      margin-top: 42px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        width: min(100% - 24px, 1040px);
+        padding-top: 36px;
+        padding-bottom: 64px;
+      }
+
+      .header {
+        padding-top: 36px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        min-height: 280px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        width: min(100% - 18px, 1040px);
+      }
+
+      .top-controls {
+        display: block;
+      }
+
+      .language-control {
+        margin-top: 14px;
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .language-control select {
+        width: 100%;
+      }
+
+      .card {
+        padding: 22px;
+        border-radius: 20px;
+      }
+
+      h1 {
+        letter-spacing: -0.05em;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <main class="page">
-    <section class="hero">
-      <p class="eyebrow">Atelier Composition Son</p>
-      <h1>2声対位法トレーナー</h1>
-      <p class="lead">
-        第一種対位法、1音対1音の基礎を練習するためのオンライン教材です。
-        定旋律と対旋律を入力すると、協和音程や連続5度・連続8度を確認できます。
-      </p>
+    <header class="header">
+      <div class="top-controls">
+        <p class="home-label">Atelier Composition Son</p>
 
-      <div class="actions">
-        <a class="button primary" href="counterpoint-checker.html">
-          第一種対位法チェッカーを開く
-        </a>
+        <label class="language-control" for="languageSelect">
+          <span data-i18n="languageLabel">言語</span>
+          <select id="languageSelect" onchange="setLanguage(this.value)">
+            <option value="ja">日本語</option>
+            <option value="fr">Français</option>
+          </select>
+        </label>
       </div>
+
+      <p class="eyebrow">Counterpoint Practice Tools</p>
+      <h1 data-i18n="title">対位法練習ツール</h1>
+      <p class="lead" data-i18n="lead">
+        第一種対位法をブラウザ上で練習するためのオンラインツールです。
+        2声版と3声版を選択できます。
+      </p>
+      <p class="sublead" data-i18n="sublead">
+        各ページ内でも日本語 / フランス語を切り替えられます。
+      </p>
+    </header>
+
+    <section class="grid" aria-label="Counterpoint tools">
+      <a class="card" href="counterpoint-checker.html">
+        <div class="card-top">
+          <span class="tag" data-i18n="twoTag">2声</span>
+          <span class="arrow">↗</span>
+        </div>
+
+        <h2 data-i18n="twoTitle">第一種2声対位法チェッカー</h2>
+        <p data-i18n="twoDescription">
+          定旋律に対して1つの対旋律を入力し、協和音程、連続5度、連続8度などを確認します。
+        </p>
+
+        <div class="features">
+          <span class="feature" data-i18n="featureTwoVoices">2 voices</span>
+          <span class="feature" data-i18n="featureBilingual">日本語 / Français</span>
+          <span class="feature" data-i18n="featurePlayback">再生</span>
+          <span class="feature" data-i18n="featureLevels">レベル</span>
+        </div>
+      </a>
+
+      <a class="card" href="three-voice/three-voice-counterpoint.html">
+        <div class="card-top">
+          <span class="tag" data-i18n="threeTag">3声</span>
+          <span class="arrow">↗</span>
+        </div>
+
+        <h2 data-i18n="threeTitle">第一種3声対位法チェッカー</h2>
+        <p data-i18n="threeDescription">
+          定旋律に対して2つの対旋律を入力し、3声間の協和音程と声部ペアごとの連続完全音程を確認します。
+        </p>
+
+        <div class="features">
+          <span class="feature" data-i18n="featureThreeVoices">3 voices</span>
+          <span class="feature" data-i18n="featureVoiceSelect">声部選択</span>
+          <span class="feature" data-i18n="featurePlayback">再生</span>
+          <span class="feature" data-i18n="featureLevels">レベル</span>
+        </div>
+      </a>
     </section>
 
-    <section class="cards">
-      <article class="card">
-        <h2>学習内容</h2>
-        <ul>
-          <li>定旋律と対旋律</li>
-          <li>協和音程と不協和音程</li>
-          <li>連続5度・連続8度</li>
-          <li>開始と終止の確認</li>
-        </ul>
-      </article>
-
-      <article class="card">
-        <h2>入力形式</h2>
-        <p>
-          音名は半角英字で入力します。
-        </p>
-        <pre>C4 D4 E4 F4 G4 F4 E4 D4 C4</pre>
-      </article>
-
-      <article class="card">
-        <h2>対象</h2>
-        <p>
-          作曲、和声、対位法を学び始めた方、または受験準備として基礎を確認したい方向けです。
-        </p>
-      </article>
-    </section>
+    <footer class="footer">
+      <p data-i18n="footer">
+        © Atelier Composition Son｜Composition, music theory, and creative listening.
+      </p>
+    </footer>
   </main>
+
+  <script>
+    const I18N = {
+      ja: {
+        languageLabel: "言語",
+        title: "対位法練習ツール",
+        lead: "第一種対位法をブラウザ上で練習するためのオンラインツールです。2声版と3声版を選択できます。",
+        sublead: "各ページ内でも日本語 / フランス語を切り替えられます。",
+        twoTag: "2声",
+        twoTitle: "第一種2声対位法チェッカー",
+        twoDescription: "定旋律に対して1つの対旋律を入力し、協和音程、連続5度、連続8度などを確認します。",
+        threeTag: "3声",
+        threeTitle: "第一種3声対位法チェッカー",
+        threeDescription: "定旋律に対して2つの対旋律を入力し、3声間の協和音程と声部ペアごとの連続完全音程を確認します。",
+        featureTwoVoices: "2 voices",
+        featureThreeVoices: "3 voices",
+        featureBilingual: "日本語 / Français",
+        featurePlayback: "再生",
+        featureLevels: "レベル",
+        featureVoiceSelect: "声部選択",
+        footer: "© Atelier Composition Son｜Composition, music theory, and creative listening."
+      },
+      fr: {
+        languageLabel: "Langue",
+        title: "Outils de pratique du contrepoint",
+        lead: "Outils en ligne pour pratiquer le contrepoint de première espèce dans le navigateur. Vous pouvez choisir la version à deux voix ou à trois voix.",
+        sublead: "Chaque page peut également être affichée en japonais ou en français.",
+        twoTag: "2 voix",
+        twoTitle: "Correcteur de contrepoint à deux voix",
+        twoDescription: "Saisissez un contrepoint au-dessus d’un cantus et vérifiez les consonances, les quintes parallèles et les octaves parallèles.",
+        threeTag: "3 voix",
+        threeTitle: "Correcteur de contrepoint à trois voix",
+        threeDescription: "Saisissez deux voix de contrepoint au-dessus d’un cantus et vérifiez les consonances entre les trois voix ainsi que les parallélismes parfaits.",
+        featureTwoVoices: "2 voix",
+        featureThreeVoices: "3 voix",
+        featureBilingual: "日本語 / Français",
+        featurePlayback: "Lecture",
+        featureLevels: "Niveaux",
+        featureVoiceSelect: "Choix de la voix",
+        footer: "© Atelier Composition Son｜Composition, théorie musicale et écoute créative."
+      }
+    };
+
+    function setLanguage(lang) {
+      const dictionary = I18N[lang] || I18N.ja;
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        const key = element.getAttribute("data-i18n");
+        if (dictionary[key]) {
+          element.textContent = dictionary[key];
+        }
+      });
+
+      localStorage.setItem("counterpointIndexLanguage", lang);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedLanguage = localStorage.getItem("counterpointIndexLanguage") || "ja";
+      const select = document.getElementById("languageSelect");
+
+      if (select) {
+        select.value = savedLanguage;
+      }
+
+      setLanguage(savedLanguage);
+    });
+  </script>
 </body>
 </html>

@@ -1,33 +1,62 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>2声対位法チェッカー</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>第一種2声対位法チェッカー｜Atelier Composition Son</title>
+  <meta name="description" content="第一種2声対位法の協和音程、連続5度、連続8度を確認するオンラインチェッカーです。" />
+
+  <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
-  <h1>2声対位法チェッカー</h1>
+  <main class="page">
+    <header class="checker-header">
+      <a class="back-link" href="index.html">← トップへ戻る</a>
+      <p class="eyebrow">First Species Counterpoint</p>
+      <h1>第一種2声対位法チェッカー</h1>
+      <p class="lead">
+        定旋律と対旋律を入力して、縦の音程、協和音程、連続5度・連続8度を確認します。
+      </p>
+    </header>
 
-  <p>第一種対位法、1音対1音の練習ページです。</p>
+    <section class="checker-panel">
+      <div class="field">
+        <label for="cantus">定旋律 Cantus Firmus</label>
+        <textarea id="cantus" rows="3">C4 D4 E4 F4 G4 F4 E4 D4 C4</textarea>
+      </div>
 
-  <label>定旋律</label><br>
-  <textarea id="cantus" rows="3" cols="60">C4 D4 E4 F4 G4 F4 E4 D4 C4</textarea>
+      <div class="field">
+        <label for="counterpoint">対旋律 Counterpoint</label>
+        <textarea id="counterpoint" rows="3">G4 F4 G4 A4 B4 A4 G4 F4 C5</textarea>
+      </div>
 
-  <br><br>
+      <button class="button primary" onclick="analyzeCounterpoint()">
+        解析する
+      </button>
+    </section>
 
-  <label>対旋律</label><br>
-  <textarea id="counterpoint" rows="3" cols="60">G4 A4 C5 B4 D5 C5 B4 A4 C5</textarea>
+    <section class="result-section">
+      <h2>解析結果</h2>
+      <div id="summary" class="summary-box">
+        まだ解析していません。
+      </div>
+      <div id="result" class="result-list"></div>
+    </section>
 
-  <br><br>
+    <section class="guide card">
+      <h2>入力ルール</h2>
+      <p>
+        音名は <strong>C4 D4 E4</strong> のように、英語音名 + オクターブ番号で入力してください。
+      </p>
+      <p>
+        シャープとフラットも使えます。
+      </p>
+      <pre>C4 D4 E4 F#4 G4 Bb4 C5</pre>
+    </section>
+  </main>
 
-  <button onclick="analyzeCounterpoint()">解析する</button>
-
-  <h2>解析結果</h2>
-  <div id="result"></div>
-
-  <script>
-    function analyzeCounterpoint() {
-      document.getElementById("result").innerHTML = "ここに解析結果を表示します。";
-    }
-  </script>
+  <script src="js/counterpoint.js"></script>
 </body>
 </html>

@@ -1027,7 +1027,7 @@ function drawNote(svg, note, x, voice, index, bottomLineY, duration = "quarter")
 
   // Module 3:
   // - cantus: whole note = open notehead, no stem
-  // - counterpoint: quarter note = filled notehead + stem + flag
+  // - counterpoint: quarter note = filled notehead + stem, no flag
   if (isCantus) {
     svg.appendChild(createSvgElement("ellipse", {
       cx: x,
@@ -1054,8 +1054,6 @@ function drawNote(svg, note, x, voice, index, bottomLineY, duration = "quarter")
       y2: y - 34,
       class: isCurrentPlayback ? "note-stem playing" : isSelected ? "note-stem selected" : "note-stem"
     }));
-
-    drawQuarterFlag(svg, x, y, isSelected, isCurrentPlayback);
   }
 
   svg.appendChild(createSvgElement("text", {

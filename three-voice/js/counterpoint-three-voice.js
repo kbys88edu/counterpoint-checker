@@ -10,14 +10,39 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 const SCORE = {
   width: 960,
-  height: 340,
-  left: 95,
+  height: 520,
+  left: 105,
   right: 45,
   staffGap: 10,
-  bottomLineY: 170,
   noteStep: 5,
-  playheadTop: 48,
-  playheadBottom: 265
+  playheadTop: 40,
+  playheadBottom: 438,
+  staves: {
+    counterpoint1: {
+      label: "CP1",
+      bottomLineY: 118,
+      labelY: 98,
+      noteLabelY: 56,
+      xOffset: 0,
+      stemUp: true
+    },
+    counterpoint2: {
+      label: "CP2",
+      bottomLineY: 252,
+      labelY: 232,
+      noteLabelY: 190,
+      xOffset: 0,
+      stemUp: true
+    },
+    cantus: {
+      label: "Cantus",
+      bottomLineY: 386,
+      labelY: 366,
+      noteLabelY: 448,
+      xOffset: 0,
+      stemUp: false
+    }
+  }
 };
 
 const VOICES = ["cantus", "counterpoint1", "counterpoint2"];
@@ -787,16 +812,20 @@ function clearSvg(svg) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
 }
 
-function noteToY(note) {
+function noteToY(note, voice = "counterpoint1") {
   const noteStep = getDiatonicStep(note);
   const e4Step = getDiatonicStep("E4");
+  const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
+
   if (noteStep === null || e4Step === null) return null;
-  return SCORE.bottomLineY - (noteStep - e4Step) * SCORE.noteStep;
+
+  return staff.bottomLineY - (noteStep - e4Step) * SCORE.noteStep;
 }
 
-function yToNaturalNote(y) {
+function yToNaturalNote(y, voice = editVoice) {
+  const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
   const e4Step = getDiatonicStep("E4");
-  const rawStep = Math.round((SCORE.bottomLineY - y) / SCORE.noteStep);
+  const rawStep = Math.round((staff.bottomLineY - y) / SCORE.noteStep);
   const targetStep = e4Step + rawStep;
 
   let closest = NATURAL_NOTES[0];
@@ -805,6 +834,7 @@ function yToNaturalNote(y) {
   NATURAL_NOTES.forEach((note) => {
     const step = getDiatonicStep(note);
     const distance = Math.abs(step - targetStep);
+
     if (distance < closestDistance) {
       closest = note;
       closestDistance = distance;
@@ -915,25 +945,54 @@ function previewTimbre() {
 function drawStaff(svg, noteCount) {
   const startX = SCORE.left - 30;
   const endX = SCORE.width - SCORE.right + 10;
-
-  for (let i = 0; i < 5; i++) {
-    const y = SCORE.bottomLineY - i * SCORE.staffGap;
-    svg.appendChild(createSvgElement("line", { x1: startX, y1: y, x2: endX, y2: y, class: "staff-line" }));
-  }
-
-  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY - 64, class: "voice-label" })).textContent = "CP1";
-  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY - 22, class: "voice-label" })).textContent = "CP2";
-  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY + 60, class: "voice-label" })).textContent = "Cantus";
-
   const positions = getScorePositions(noteCount);
 
-  positions.forEach((x, i) => {
-    svg.appendChild(createSvgElement("circle", { cx: x, cy: SCORE.bottomLineY + 72, r: 2.8, class: "slot-marker" }));
-    svg.appendChild(createSvgElement("text", { x: x - 4, y: SCORE.bottomLineY + 100, class: "note-label" })).textContent = i + 1;
+  Object.entries(SCORE.staves).forEach(([voice, staff]) => {
+    for (let i = 0; i < 5; i++) {
+      const y = staff.bottomLineY - i * SCORE.staffGap;
+      svg.appendChild(createSvgElement("line", {
+        x1: startX,
+        y1: y,
+        x2: endX,
+        y2: y,
+        class: "staff-line"
+      }));
+    }
 
+    svg.appendChild(createSvgElement("text", {
+      x: 22,
+      y: staff.labelY,
+      class: "voice-label"
+    })).textContent = staff.label;
+
+    if (voice === "cantus") {
+      positions.forEach((x, i) => {
+        svg.appendChild(createSvgElement("circle", {
+          cx: x,
+          cy: staff.bottomLineY + 72,
+          r: 2.8,
+          class: "slot-marker"
+        }));
+
+        svg.appendChild(createSvgElement("text", {
+          x: x - 4,
+          y: staff.bottomLineY + 100,
+          class: "note-label"
+        })).textContent = i + 1;
+      });
+    }
+  });
+
+  positions.forEach((x, i) => {
     if (i > 0) {
       const midX = (positions[i - 1] + x) / 2;
-      svg.appendChild(createSvgElement("line", { x1: midX, y1: SCORE.playheadTop, x2: midX, y2: SCORE.playheadBottom, class: "measure-line" }));
+      svg.appendChild(createSvgElement("line", {
+        x1: midX,
+        y1: SCORE.playheadTop,
+        x2: midX,
+        y2: SCORE.playheadBottom,
+        class: "measure-line"
+      }));
     }
   });
 }
@@ -962,19 +1021,32 @@ function drawPlayhead(svg, positions, noteCount) {
   }));
 }
 
-function drawLedgerLines(svg, x, y) {
-  const topLineY = SCORE.bottomLineY - 4 * SCORE.staffGap;
-  const bottomLineY = SCORE.bottomLineY;
+function drawLedgerLines(svg, x, y, voice = "counterpoint1") {
+  const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
+  const topLineY = staff.bottomLineY - 4 * SCORE.staffGap;
+  const bottomLineY = staff.bottomLineY;
 
   if (y < topLineY - SCORE.noteStep) {
     for (let ly = topLineY - 2 * SCORE.noteStep; ly >= y - 1; ly -= 2 * SCORE.noteStep) {
-      svg.appendChild(createSvgElement("line", { x1: x - 14, y1: ly, x2: x + 14, y2: ly, class: "ledger-line" }));
+      svg.appendChild(createSvgElement("line", {
+        x1: x - 14,
+        y1: ly,
+        x2: x + 14,
+        y2: ly,
+        class: "ledger-line"
+      }));
     }
   }
 
   if (y > bottomLineY + SCORE.noteStep) {
     for (let ly = bottomLineY + 2 * SCORE.noteStep; ly <= y + 1; ly += 2 * SCORE.noteStep) {
-      svg.appendChild(createSvgElement("line", { x1: x - 14, y1: ly, x2: x + 14, y2: ly, class: "ledger-line" }));
+      svg.appendChild(createSvgElement("line", {
+        x1: x - 14,
+        y1: ly,
+        x2: x + 14,
+        y2: ly,
+        class: "ledger-line"
+      }));
     }
   }
 }
@@ -990,22 +1062,16 @@ function drawAccidental(svg, parsed, x, y, voice, isSelected, isCurrentPlayback)
 }
 
 function drawNote(svg, note, x, voice, index) {
-  const y = noteToY(note);
+  const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
+  const y = noteToY(note, voice);
   const parsed = parseNote(note);
   if (y === null || !parsed) return;
 
   const isSelected = voice === editVoice && index === selectedIndex && !isPlaying;
   const isCurrentPlayback = index === playbackIndex && isPlaying;
+  const noteX = x + staff.xOffset;
 
-  const offsets = {
-    cantus: -10,
-    counterpoint1: 12,
-    counterpoint2: 0
-  };
-
-  const noteX = x + offsets[voice];
-
-  drawLedgerLines(svg, noteX, y);
+  drawLedgerLines(svg, noteX, y, voice);
   drawAccidental(svg, parsed, noteX, y, voice, isSelected, isCurrentPlayback);
 
   svg.appendChild(createSvgElement("ellipse", {
@@ -1017,7 +1083,7 @@ function drawNote(svg, note, x, voice, index) {
     class: `note-head ${voice}${isSelected ? " selected" : ""}${isCurrentPlayback ? " playing" : ""}`
   }));
 
-  const stemUp = voice !== "cantus";
+  const stemUp = staff.stemUp;
   svg.appendChild(createSvgElement("line", {
     x1: stemUp ? noteX + 7 : noteX - 7,
     y1: y,
@@ -1028,7 +1094,7 @@ function drawNote(svg, note, x, voice, index) {
 
   svg.appendChild(createSvgElement("text", {
     x: noteX - 12,
-    y: voice === "counterpoint1" ? SCORE.bottomLineY - 88 : voice === "counterpoint2" ? SCORE.bottomLineY - 62 : SCORE.bottomLineY + 55,
+    y: staff.noteLabelY,
     class: isCurrentPlayback ? "note-label playing" : isSelected ? "note-label selected" : "note-label"
   })).textContent = note;
 }
@@ -1086,7 +1152,7 @@ function handleScoreClick(event) {
     }
   });
 
-  const clickedNote = yToNaturalNote(viewY);
+  const clickedNote = yToNaturalNote(viewY, editVoice);
 
   while (notes.length < noteCount) notes.push("");
 

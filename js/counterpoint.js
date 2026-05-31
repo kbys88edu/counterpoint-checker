@@ -26,6 +26,18 @@ const SCORE = {
   noteStep: 5
 };
 
+let selectedIndex = 0;
+
+/*
+  "flat"  = Db, Eb, Gb, Ab, Bb
+  "sharp" = C#, D#, F#, G#, A#
+*/
+let accidentalPreference = "flat";
+
+/* =========================
+   NOTE CONVERSION
+========================= */
+
 function noteToMidi(note) {
   const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
 
@@ -53,6 +65,25 @@ function noteToMidi(note) {
   return 12 * (octave + 1) + value;
 }
 
+function midiToNote(midi, preference = accidentalPreference) {
+  const sharpNames = [
+    "C", "C#", "D", "D#", "E", "F",
+    "F#", "G", "G#", "A", "A#", "B"
+  ];
+
+  const flatNames = [
+    "C", "Db", "D", "Eb", "E", "F",
+    "Gb", "G", "Ab", "A", "Bb", "B"
+  ];
+
+  const pitch = ((midi % 12) + 12) % 12;
+  const octave = Math.floor(midi / 12) - 1;
+
+  const names = preference === "sharp" ? sharpNames : flatNames;
+
+  return names[pitch] + octave;
+}
+
 function parseNote(note) {
   const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
 
@@ -67,6 +98,7 @@ function parseNote(note) {
 
 function getDiatonicStep(note) {
   const parsed = parseNote(note);
+
   if (!parsed) return null;
 
   return parsed.octave * 7 + NOTE_LETTER_STEPS[parsed.letter];
@@ -121,6 +153,10 @@ function direction(a, b) {
   return 0;
 }
 
+/* =========================
+   INPUT HELPERS
+========================= */
+
 function getNotesFromTextarea(id) {
   const el = document.getElementById(id);
   if (!el) return [];
@@ -146,14 +182,25 @@ function updateDisplays() {
   const counterpointDisplay = document.getElementById("counterpointDisplay");
   const scoreStatus = document.getElementById("scoreStatus");
 
-  if (cantusDisplay) cantusDisplay.textContent = cantus.join(" ");
-  if (counterpointDisplay) {
-    counterpointDisplay.textContent = counterpoint.length ? counterpoint.join(" ") : "未入力";
+  if (cantusDisplay) {
+    cantusDisplay.textContent = cantus.join(" ");
   }
+
+  if (counterpointDisplay) {
+    counterpointDisplay.textContent = counterpoint.length
+      ? counterpoint.join(" ")
+      : "未入力";
+  }
+
   if (scoreStatus) {
-    scoreStatus.textContent = `対旋律：${counterpoint.length}音 / 定旋律：${cantus.length}音`;
+    scoreStatus.textContent =
+      `対旋律：${counterpoint.length}音 / 定旋律：${cantus.length}音 / 表記：${accidentalPreference === "flat" ? "♭" : "♯"}`;
   }
 }
+
+/* =========================
+   ANALYSIS
+========================= */
 
 function addResult(results, type, message) {
   results.push({ type, message });
@@ -172,6 +219,7 @@ function renderResults(results) {
   resultBox.innerHTML = results
     .map((item) => {
       let label = "OK";
+
       if (item.type === "warn") label = "注意";
       if (item.type === "error") label = "禁止";
 
@@ -187,6 +235,7 @@ function renderResults(results) {
 
 function renderSummary(errorCount, warnCount, okCount) {
   const summary = document.getElementById("summary");
+
   if (!summary) return;
 
   if (errorCount === 0 && warnCount === 0) {
@@ -227,6 +276,7 @@ function analyzeCounterpoint() {
   }
 
   const length = Math.min(cantus.length, counterpoint.length);
+
   const cantusMidi = [];
   const counterMidi = [];
 
@@ -338,7 +388,11 @@ function analyzeCounterpoint() {
       isPerfectFifth(interval1) &&
       isPerfectFifth(interval2)
     ) {
-      addResult(results, "error", `${i + 1}音目 → ${i + 2}音目：連続5度があります。`);
+      addResult(
+        results,
+        "error",
+        `${i + 1}音目 → ${i + 2}音目：連続5度があります。`
+      );
       errorCount++;
     }
 
@@ -348,7 +402,11 @@ function analyzeCounterpoint() {
       isPerfectOctaveOrUnison(interval1) &&
       isPerfectOctaveOrUnison(interval2)
     ) {
-      addResult(results, "error", `${i + 1}音目 → ${i + 2}音目：連続8度または連続1度があります。`);
+      addResult(
+        results,
+        "error",
+        `${i + 1}音目 → ${i + 2}音目：連続8度または連続1度があります。`
+      );
       errorCount++;
     }
   }
@@ -357,6 +415,10 @@ function analyzeCounterpoint() {
   renderResults(results);
   renderScore();
 }
+
+/* =========================
+   SVG HELPERS
+========================= */
 
 function createSvgElement(tag, attrs = {}) {
   const el = document.createElementNS(SVG_NS, tag);
@@ -415,12 +477,103 @@ function getScorePositions(noteCount) {
   );
 }
 
+/* =========================
+   NOTE MOVEMENT
+========================= */
+
+function moveNoteDiatonic(note, step) {
+  const parsed = parseNote(note);
+
+  if (!parsed) return note;
+
+  const currentStep = getDiatonicStep(note);
+  const targetStep = currentStep + step;
+
+  let closest = NATURAL_NOTES[0];
+  let closestDistance = Infinity;
+
+  NATURAL_NOTES.forEach((candidate) => {
+    const candidateStep = getDiatonicStep(candidate);
+    const distance = Math.abs(candidateStep - targetStep);
+
+    if (distance < closestDistance) {
+      closest = candidate;
+      closestDistance = distance;
+    }
+  });
+
+  return closest;
+}
+
+function moveNoteChromatic(note, semitone) {
+  const midi = noteToMidi(note);
+
+  if (midi === null) return note;
+
+  return midiToNote(midi + semitone, accidentalPreference);
+}
+
+function moveSelectedNote(amount, mode) {
+  const cantus = getNotesFromTextarea("cantus");
+  let counterpoint = getNotesFromTextarea("counterpoint");
+
+  if (!cantus.length) return;
+
+  const noteCount = cantus.length;
+
+  while (counterpoint.length < noteCount) {
+    counterpoint.push("");
+  }
+
+  if (selectedIndex < 0) {
+    selectedIndex = 0;
+  }
+
+  if (selectedIndex >= noteCount) {
+    selectedIndex = noteCount - 1;
+  }
+
+  const currentNote = counterpoint[selectedIndex];
+
+  if (!currentNote) {
+    counterpoint[selectedIndex] = "G4";
+  } else if (mode === "chromatic") {
+    counterpoint[selectedIndex] = moveNoteChromatic(currentNote, amount);
+  } else {
+    counterpoint[selectedIndex] = moveNoteDiatonic(currentNote, amount);
+  }
+
+  setNotesToTextarea("counterpoint", counterpoint);
+  renderScore();
+}
+
+function deleteSelectedNote() {
+  const cantus = getNotesFromTextarea("cantus");
+  let counterpoint = getNotesFromTextarea("counterpoint");
+
+  if (!cantus.length) return;
+
+  while (counterpoint.length < cantus.length) {
+    counterpoint.push("");
+  }
+
+  counterpoint[selectedIndex] = "";
+
+  setNotesToTextarea("counterpoint", counterpoint);
+  renderScore();
+}
+
+/* =========================
+   DRAW SCORE
+========================= */
+
 function drawStaff(svg, noteCount) {
   const startX = SCORE.left - 30;
   const endX = SCORE.width - SCORE.right + 10;
 
   for (let i = 0; i < 5; i++) {
     const y = SCORE.bottomLineY - i * SCORE.staffGap;
+
     svg.appendChild(
       createSvgElement("line", {
         x1: startX,
@@ -470,6 +623,7 @@ function drawStaff(svg, noteCount) {
 
     if (i > 0) {
       const midX = (positions[i - 1] + x) / 2;
+
       svg.appendChild(
         createSvgElement("line", {
           x1: midX,
@@ -488,7 +642,11 @@ function drawLedgerLines(svg, x, y) {
   const bottomLineY = SCORE.bottomLineY;
 
   if (y < topLineY - SCORE.noteStep) {
-    for (let ly = topLineY - 2 * SCORE.noteStep; ly >= y - 1; ly -= 2 * SCORE.noteStep) {
+    for (
+      let ly = topLineY - 2 * SCORE.noteStep;
+      ly >= y - 1;
+      ly -= 2 * SCORE.noteStep
+    ) {
       svg.appendChild(
         createSvgElement("line", {
           x1: x - 14,
@@ -502,7 +660,11 @@ function drawLedgerLines(svg, x, y) {
   }
 
   if (y > bottomLineY + SCORE.noteStep) {
-    for (let ly = bottomLineY + 2 * SCORE.noteStep; ly <= y + 1; ly += 2 * SCORE.noteStep) {
+    for (
+      let ly = bottomLineY + 2 * SCORE.noteStep;
+      ly <= y + 1;
+      ly += 2 * SCORE.noteStep
+    ) {
       svg.appendChild(
         createSvgElement("line", {
           x1: x - 14,
@@ -516,7 +678,22 @@ function drawLedgerLines(svg, x, y) {
   }
 }
 
-function drawNote(svg, note, x, voice) {
+function drawAccidental(svg, parsed, x, y, isCantus) {
+  if (!parsed.accidental) return;
+
+  const symbol = parsed.accidental === "#" ? "♯" : "♭";
+  const typeClass = parsed.accidental === "#" ? "sharp" : "flat";
+
+  svg.appendChild(
+    createSvgElement("text", {
+      x: x - 30,
+      y: y + 1,
+      class: `accidental ${typeClass}${isCantus ? " cantus" : ""}`
+    })
+  ).textContent = symbol;
+}
+
+function drawNote(svg, note, x, voice, index) {
   const y = noteToY(note);
   const parsed = parseNote(note);
 
@@ -528,15 +705,20 @@ function drawNote(svg, note, x, voice) {
 
   drawLedgerLines(svg, noteX, y);
 
-  if (parsed.accidental) {
+  if (!isCantus && index === selectedIndex) {
     svg.appendChild(
-      createSvgElement("text", {
-        x: noteX - 28,
-        y: y + 6,
-        class: "accidental"
+      createSvgElement("ellipse", {
+        cx: noteX,
+        cy: y,
+        rx: 14,
+        ry: 10,
+        transform: `rotate(-18 ${noteX} ${y})`,
+        class: "selected-note-ring"
       })
-    ).textContent = parsed.accidental === "#" ? "♯" : "♭";
+    );
   }
+
+  drawAccidental(svg, parsed, noteX, y, isCantus);
 
   svg.appendChild(
     createSvgElement("ellipse", {
@@ -582,30 +764,47 @@ function drawNote(svg, note, x, voice) {
 
 function renderScore() {
   const svg = document.getElementById("scoreEditor");
+
   if (!svg) return;
 
   clearSvg(svg);
 
   const cantus = getNotesFromTextarea("cantus");
   const counterpoint = getNotesFromTextarea("counterpoint");
+
   const noteCount = Math.max(cantus.length, counterpoint.length, 1);
   const positions = getScorePositions(noteCount);
+
+  if (selectedIndex >= noteCount) {
+    selectedIndex = noteCount - 1;
+  }
+
+  if (selectedIndex < 0) {
+    selectedIndex = 0;
+  }
 
   drawStaff(svg, noteCount);
 
   cantus.forEach((note, i) => {
-    drawNote(svg, note, positions[i], "cantus");
+    drawNote(svg, note, positions[i], "cantus", i);
   });
 
   counterpoint.forEach((note, i) => {
-    drawNote(svg, note, positions[i], "counterpoint");
+    if (note) {
+      drawNote(svg, note, positions[i], "counterpoint", i);
+    }
   });
 
   updateDisplays();
 }
 
+/* =========================
+   SCORE CLICK / EDIT
+========================= */
+
 function handleScoreClick(event) {
   const svg = document.getElementById("scoreEditor");
+
   if (!svg) return;
 
   const rect = svg.getBoundingClientRect();
@@ -637,35 +836,106 @@ function handleScoreClick(event) {
     counterpoint.push("");
   }
 
+  selectedIndex = nearestIndex;
   counterpoint[nearestIndex] = clickedNote;
 
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
+
+  svg.focus();
 }
 
 function undoCounterpointNote() {
   const counterpoint = getNotesFromTextarea("counterpoint");
+
   counterpoint.pop();
+
+  if (selectedIndex >= counterpoint.length) {
+    selectedIndex = Math.max(0, counterpoint.length - 1);
+  }
+
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
 }
 
 function clearCounterpoint() {
+  selectedIndex = 0;
   setNotesToTextarea("counterpoint", []);
   renderScore();
 }
 
 function setExample() {
-  setNotesToTextarea("cantus", ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"]);
-  setNotesToTextarea("counterpoint", ["G4", "F4", "G4", "A4", "B4", "A4", "G4", "F4", "C5"]);
+  setNotesToTextarea("cantus", [
+    "C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"
+  ]);
+
+  setNotesToTextarea("counterpoint", [
+    "G4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "C5"
+  ]);
+
+  selectedIndex = 0;
+  accidentalPreference = "flat";
+
   renderScore();
 }
+
+/* =========================
+   ACCIDENTAL PREFERENCE
+========================= */
+
+function setAccidentalPreference(preference) {
+  if (preference !== "flat" && preference !== "sharp") return;
+
+  accidentalPreference = preference;
+
+  const counterpoint = getNotesFromTextarea("counterpoint");
+
+  const converted = counterpoint.map((note) => {
+    const midi = noteToMidi(note);
+    if (midi === null) return note;
+    return midiToNote(midi, accidentalPreference);
+  });
+
+  setNotesToTextarea("counterpoint", converted);
+  renderScore();
+}
+
+/* =========================
+   INIT
+========================= */
 
 window.addEventListener("DOMContentLoaded", () => {
   const svg = document.getElementById("scoreEditor");
 
   if (svg) {
     svg.addEventListener("click", handleScoreClick);
+
+    svg.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+
+        if (event.shiftKey) {
+          moveSelectedNote(1, "chromatic");
+        } else {
+          moveSelectedNote(1, "diatonic");
+        }
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+
+        if (event.shiftKey) {
+          moveSelectedNote(-1, "chromatic");
+        } else {
+          moveSelectedNote(-1, "diatonic");
+        }
+      }
+
+      if (event.key === "Backspace" || event.key === "Delete") {
+        event.preventDefault();
+        deleteSelectedNote();
+      }
+    });
   }
 
   renderScore();

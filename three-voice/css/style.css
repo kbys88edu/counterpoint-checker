@@ -291,7 +291,7 @@ h2 {
 
 .score-editor {
   width: 100%;
-  min-height: 340px;
+  min-height: 520px;
   display: block;
   border-radius: 16px;
   background: #ffffff;
@@ -542,7 +542,7 @@ h2 {
   }
 
   .score-editor {
-    min-height: 300px;
+    min-height: 440px;
   }
 }
 

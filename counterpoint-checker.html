@@ -18,14 +18,29 @@
       <h1>第一種2声対位法チェッカー</h1>
       <p class="lead">
         五線譜をクリックして対旋律を入力します。選択された音は青色で表示されます。
-        ↑で半音上行、↓で半音下行します。上行時はシャープ、下行時はフラットで表示されます。
-        クリック時と移動時には音が鳴ります。
+        ↑で半音上行、↓で半音下行します。← / → で前後の音へ移動します。
+        スペースキーで定旋律と対旋律を同時に再生・停止できます。
       </p>
     </header>
 
     <section class="checker-panel">
       <textarea id="cantus" class="hidden-input">C4 D4 E4 F4 G4 F4 E4 D4 C4</textarea>
       <textarea id="counterpoint" class="hidden-input"></textarea>
+
+      <div class="exercise-tools">
+        <label class="exercise-control" for="exerciseSelect">
+          課題
+          <select id="exerciseSelect"></select>
+        </label>
+
+        <button class="button small" type="button" onclick="loadSelectedExercise()">
+          課題を読み込む
+        </button>
+
+        <p class="exercise-description" id="exerciseDescription">
+          課題を選択してください。
+        </p>
+      </div>
 
       <div class="score-tools">
         <button class="button small" type="button" onclick="setExample()">
@@ -49,12 +64,31 @@
         </button>
       </div>
 
+      <div class="playback-tools">
+        <button id="playPauseButton" class="button primary" type="button" onclick="togglePlayback()">
+          再生
+        </button>
+
+        <button class="button small" type="button" onclick="stopPlayback(true)">
+          最初に戻す
+        </button>
+
+        <label class="tempo-control" for="tempoInput">
+          Tempo
+          <input id="tempoInput" type="number" min="40" max="180" value="72" />
+        </label>
+
+        <p class="playback-hint">
+          Space：再生 / 停止　｜　停止後にもう一度 Space：停止位置から再開
+        </p>
+      </div>
+
       <div class="score-box">
         <div class="score-head">
           <div>
             <h2>五線入力</h2>
             <p>
-              五線をクリックして音を置きます。置いた音は青色で選択され、↑↓キーで半音移動できます。
+              五線をクリックして音を置きます。置いた音は青色で選択され、↑↓で半音移動、←→で前後の音へ移動できます。
             </p>
           </div>
           <div class="score-status" id="scoreStatus">

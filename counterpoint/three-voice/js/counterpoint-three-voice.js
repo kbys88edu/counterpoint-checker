@@ -465,11 +465,16 @@ function playVoiceLikeNote(midi, duration = 0.45, gainScale = 1) {
 const SAMPLE_VOICE_SETS = {
   femaleSample: {
     folder: "female",
+    // Required female files:
+    // C3.wav, G3.wav, C4.wav, G4.wav
+    // C2.wav and G2.wav are intentionally not used.
     notes: ["C3", "G3", "C4", "G4"],
     transposeSemitones: -12
   },
   maleSample: {
     folder: "male",
+    // Required male files:
+    // C2.wav, G2.wav, C3.wav, G3.wav
     notes: ["C2", "G2", "C3", "G3"],
     transposeSemitones: 0
   }
@@ -553,7 +558,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   const source = ctx.createBufferSource();
   source.buffer = buffer;
 
-  // female samples were generated one octave too high, so transposeSemitones = -12.
+  // Female samples are intentionally played one octave lower.
+  // Male samples are played at their normal register.
   source.playbackRate.setValueAtTime(
     Math.pow(2, (targetMidi - sourceMidi + set.transposeSemitones) / 12),
     now
@@ -571,6 +577,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   source.start(now);
   source.stop(now + duration + 0.12);
 }
+
+
 
 
 
@@ -669,15 +677,15 @@ function playVerticalSonority(index) {
   const noteDuration = Math.max(0.28, stepDuration * 0.95);
 
   if ((mode === "all" || mode === "cantus") && notes.cantus) {
-    playNoteName(notes.cantus, noteDuration, mode === "cantus" ? 1 : 0.58);
+    playNoteName(notes.cantus, noteDuration, mode === "cantus" ? 1 : 0.58, "maleSample");
   }
 
   if ((mode === "all" || mode === "counterpoint2") && notes.counterpoint2) {
-    playNoteName(notes.counterpoint2, noteDuration, mode === "counterpoint2" ? 1 : 0.72);
+    playNoteName(notes.counterpoint2, noteDuration, mode === "counterpoint2" ? 1 : 0.72, "femaleSample");
   }
 
   if ((mode === "all" || mode === "counterpoint1") && notes.counterpoint1) {
-    playNoteName(notes.counterpoint1, noteDuration, 1);
+    playNoteName(notes.counterpoint1, noteDuration, 1, "femaleSample");
   }
 }
 
@@ -1044,21 +1052,22 @@ function clearSvg(svg) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
 }
 
-function noteToY(note, voice = "counterpoint1") {
-  const noteStep = getDiatonicStep(note);
-  const e4Step = getDiatonicStep("E4");
+function noteToY(note, voice = editVoice) {
   const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
+  const noteStep = getDiatonicStep(note);
+  const referenceNote = voice === "cantus" ? "G2" : "E4";
+  const referenceStep = getDiatonicStep(referenceNote);
 
-  if (noteStep === null || e4Step === null) return null;
-
-  return staff.bottomLineY - (noteStep - e4Step) * SCORE.noteStep;
+  if (noteStep === null || referenceStep === null) return null;
+  return staff.bottomLineY - (noteStep - referenceStep) * SCORE.noteStep;
 }
 
 function yToNaturalNote(y, voice = editVoice) {
   const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
-  const e4Step = getDiatonicStep("E4");
+  const referenceNote = voice === "cantus" ? "G2" : "E4";
+  const referenceStep = getDiatonicStep(referenceNote);
   const rawStep = Math.round((staff.bottomLineY - y) / SCORE.noteStep);
-  const targetStep = e4Step + rawStep;
+  const targetStep = referenceStep + rawStep;
 
   let closest = NATURAL_NOTES[0];
   let closestDistance = Infinity;
@@ -1174,55 +1183,43 @@ function previewTimbre() {
   playNoteName(note, 0.5, 1, "femaleSample");
 }
 
-function drawStaff(svg, noteCount) {
+function drawClef(svg, bottomLineY, clefType) {
+  const clef = clefType === "bass" ? "𝄢" : "𝄞";
+  const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
+  svg.appendChild(createSvgElement("text", { x: 52, y: bottomLineY - 20, class: className })).textContent = clef;
+}
+
+function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
   const startX = SCORE.left - 30;
   const endX = SCORE.width - SCORE.right + 10;
+
+  for (let i = 0; i < 5; i++) {
+    const y = bottomLineY - i * SCORE.staffGap;
+    svg.appendChild(createSvgElement("line", { x1: startX, y1: y, x2: endX, y2: y, class: "staff-line" }));
+  }
+
+  drawClef(svg, bottomLineY, clefType);
+  svg.appendChild(createSvgElement("text", { x: 22, y: bottomLineY - 58, class: "voice-label" })).textContent = label;
+
   const positions = getScorePositions(noteCount);
 
-  Object.entries(SCORE.staves).forEach(([voice, staff]) => {
-    for (let i = 0; i < 5; i++) {
-      const y = staff.bottomLineY - i * SCORE.staffGap;
-      svg.appendChild(createSvgElement("line", {
-        x1: startX,
-        y1: y,
-        x2: endX,
-        y2: y,
-        class: "staff-line"
-      }));
-    }
-
-    svg.appendChild(createSvgElement("text", {
-      x: 22,
-      y: staff.labelY,
-      class: "voice-label"
-    })).textContent = staff.label;
-
-    if (voice === "cantus") {
-      positions.forEach((x, i) => {
-        svg.appendChild(createSvgElement("circle", {
-          cx: x,
-          cy: staff.bottomLineY + 72,
-          r: 2.8,
-          class: "slot-marker"
-        }));
-
-        svg.appendChild(createSvgElement("text", {
-          x: x - 4,
-          y: staff.bottomLineY + 100,
-          class: "note-label"
-        })).textContent = i + 1;
-      });
-    }
-  });
-
   positions.forEach((x, i) => {
+    svg.appendChild(createSvgElement("circle", {
+      cx: x,
+      cy: bottomLineY + 56,
+      r: 2.6,
+      class: "slot-marker"
+    }));
+
+    svg.appendChild(createSvgElement("text", { x: x - 4, y: bottomLineY + 82, class: "note-label" })).textContent = i + 1;
+
     if (i > 0) {
       const midX = (positions[i - 1] + x) / 2;
       svg.appendChild(createSvgElement("line", {
         x1: midX,
-        y1: SCORE.playheadTop,
+        y1: bottomLineY - 50,
         x2: midX,
-        y2: SCORE.playheadBottom,
+        y2: bottomLineY + 66,
         class: "measure-line"
       }));
     }
@@ -1508,6 +1505,7 @@ function drawStaffForVoice(svg, noteCount, voice) {
   const endX = SCORE.width - SCORE.right + 10;
   const positions = getScorePositions(noteCount);
   const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
+  const clefType = voice === "cantus" ? "bass" : "treble";
 
   for (let i = 0; i < 5; i++) {
     const y = staff.bottomLineY - i * SCORE.staffGap;
@@ -1520,11 +1518,13 @@ function drawStaffForVoice(svg, noteCount, voice) {
     }));
   }
 
+  drawClef(svg, staff.bottomLineY, clefType);
+
   svg.appendChild(createSvgElement("text", {
     x: 22,
     y: staff.labelY,
     class: "voice-label"
-  })).textContent = staff.label;
+  })).textContent = voice === "cantus" ? "Cantus / bass clef" : `${staff.label} / treble clef`;
 
   positions.forEach((x, i) => {
     svg.appendChild(createSvgElement("circle", {

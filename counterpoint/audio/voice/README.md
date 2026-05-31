@@ -8,7 +8,10 @@ Automatic assignment:
 - Treble / counterpoint: female samples
 - Bass clef cantus: male samples
 
-Female samples are transposed down one octave in playback because the current generated files sound one octave high.
+Female:
+- Uses only C3, G3, C4, G4.
+- C2 and G2 are intentionally not used.
+- Female samples are played one octave lower.
 
 Required files:
 

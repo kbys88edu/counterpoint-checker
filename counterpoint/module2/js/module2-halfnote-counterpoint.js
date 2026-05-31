@@ -430,11 +430,16 @@ function playVoiceLikeNote(midi, duration = 0.45, gainScale = 1) {
 const SAMPLE_VOICE_SETS = {
   femaleSample: {
     folder: "female",
+    // Required female files:
+    // C3.wav, G3.wav, C4.wav, G4.wav
+    // C2.wav and G2.wav are intentionally not used.
     notes: ["C3", "G3", "C4", "G4"],
     transposeSemitones: -12
   },
   maleSample: {
     folder: "male",
+    // Required male files:
+    // C2.wav, G2.wav, C3.wav, G3.wav
     notes: ["C2", "G2", "C3", "G3"],
     transposeSemitones: 0
   }
@@ -518,7 +523,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   const source = ctx.createBufferSource();
   source.buffer = buffer;
 
-  // female samples were generated one octave too high, so transposeSemitones = -12.
+  // Female samples are intentionally played one octave lower.
+  // Male samples are played at their normal register.
   source.playbackRate.setValueAtTime(
     Math.pow(2, (targetMidi - sourceMidi + set.transposeSemitones) / 12),
     now
@@ -536,6 +542,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   source.start(now);
   source.stop(now + duration + 0.12);
 }
+
+
 
 
 
@@ -1155,13 +1163,7 @@ function deleteSelectedNote() {
 function drawClef(svg, bottomLineY, clefType) {
   const clef = clefType === "bass" ? "𝄢" : "𝄞";
   const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
-  const y = bottomLineY - 20;
-
-  svg.appendChild(createSvgElement("text", {
-    x: 52,
-    y,
-    class: className
-  })).textContent = clef;
+  svg.appendChild(createSvgElement("text", { x: 52, y: bottomLineY - 20, class: className })).textContent = clef;
 }
 
 function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
@@ -1180,7 +1182,7 @@ function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
   const positions = getScorePositions(noteCount);
 
   positions.forEach((x, i) => {
-    const isDownbeat = i % SCORE.quartersPerCantus === 0;
+    const isDownbeat = i % 4 === 0;
 
     svg.appendChild(createSvgElement("circle", {
       cx: x,
@@ -1190,11 +1192,7 @@ function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
     }));
 
     if (bottomLineY === SCORE.cantusBottomLineY && isDownbeat) {
-      svg.appendChild(createSvgElement("text", {
-        x: x - 4,
-        y: bottomLineY + 82,
-        class: "note-label"
-      })).textContent = Math.floor(i / SCORE.quartersPerCantus) + 1;
+      svg.appendChild(createSvgElement("text", { x: x - 4, y: bottomLineY + 82, class: "note-label" })).textContent = Math.floor(i / 4) + 1;
     }
 
     if (i > 0) {
@@ -1361,8 +1359,8 @@ function renderScore() {
   if (playbackIndex >= halfCount) playbackIndex = 0;
   if (playbackIndex < 0) playbackIndex = 0;
 
-  drawStaff(svg, SCORE.bottomLineY, "Counterpoint", halfCount);
-  drawStaff(svg, SCORE.cantusBottomLineY, "Cantus", halfCount);
+  drawStaff(svg, SCORE.bottomLineY, "Counterpoint / treble clef", halfCount, "treble");
+  drawStaff(svg, SCORE.cantusBottomLineY, "Cantus / bass clef", halfCount, "bass");
   drawPlayhead(svg, positions, halfCount);
 
   counterpoint.forEach((note, i) => {

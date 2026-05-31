@@ -335,11 +335,16 @@ function playVoiceLikeNote(midi, duration = 0.45, gainScale = 1) {
 const SAMPLE_VOICE_SETS = {
   femaleSample: {
     folder: "female",
+    // Required female files:
+    // C3.wav, G3.wav, C4.wav, G4.wav
+    // C2.wav and G2.wav are intentionally not used.
     notes: ["C3", "G3", "C4", "G4"],
     transposeSemitones: -12
   },
   maleSample: {
     folder: "male",
+    // Required male files:
+    // C2.wav, G2.wav, C3.wav, G3.wav
     notes: ["C2", "G2", "C3", "G3"],
     transposeSemitones: 0
   }
@@ -423,7 +428,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   const source = ctx.createBufferSource();
   source.buffer = buffer;
 
-  // female samples were generated one octave too high, so transposeSemitones = -12.
+  // Female samples are intentionally played one octave lower.
+  // Male samples are played at their normal register.
   source.playbackRate.setValueAtTime(
     Math.pow(2, (targetMidi - sourceMidi + set.transposeSemitones) / 12),
     now
@@ -441,6 +447,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   source.start(now);
   source.stop(now + duration + 0.12);
 }
+
+
 
 
 

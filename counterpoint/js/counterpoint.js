@@ -19,14 +19,15 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 const SCORE = {
   width: 960,
-  height: 300,
+  height: 330,
   left: 95,
   right: 45,
   staffGap: 10,
-  bottomLineY: 145,
+  bottomLineY: 120,
+  cantusBottomLineY: 245,
   noteStep: 5,
   playheadTop: 55,
-  playheadBottom: 228
+  playheadBottom: 305
 };
 
 const I18N = {
@@ -526,11 +527,16 @@ function playVoiceLikeNote(midi, duration = 0.45, gainScale = 1) {
 const SAMPLE_VOICE_SETS = {
   femaleSample: {
     folder: "female",
+    // Required female files:
+    // C3.wav, G3.wav, C4.wav, G4.wav
+    // C2.wav and G2.wav are intentionally not used.
     notes: ["C3", "G3", "C4", "G4"],
     transposeSemitones: -12
   },
   maleSample: {
     folder: "male",
+    // Required male files:
+    // C2.wav, G2.wav, C3.wav, G3.wav
     notes: ["C2", "G2", "C3", "G3"],
     transposeSemitones: 0
   }
@@ -614,7 +620,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   const source = ctx.createBufferSource();
   source.buffer = buffer;
 
-  // female samples were generated one octave too high, so transposeSemitones = -12.
+  // Female samples are intentionally played one octave lower.
+  // Male samples are played at their normal register.
   source.playbackRate.setValueAtTime(
     Math.pow(2, (targetMidi - sourceMidi + set.transposeSemitones) / 12),
     now
@@ -632,6 +639,8 @@ async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1
   source.start(now);
   source.stop(now + duration + 0.12);
 }
+
+
 
 
 
@@ -1158,13 +1167,14 @@ function clearSvg(svg) {
   }
 }
 
-function noteToY(note) {
+function noteToY(note, bottomLineY = SCORE.bottomLineY) {
   const noteStep = getDiatonicStep(note);
-  const e4Step = getDiatonicStep("E4");
+  const referenceNote = bottomLineY === SCORE.cantusBottomLineY ? "G2" : "E4";
+  const referenceStep = getDiatonicStep(referenceNote);
 
-  if (noteStep === null || e4Step === null) return null;
+  if (noteStep === null || referenceStep === null) return null;
 
-  return SCORE.bottomLineY - (noteStep - e4Step) * SCORE.noteStep;
+  return bottomLineY - (noteStep - referenceStep) * SCORE.noteStep;
 }
 
 function yToNaturalNote(y) {
@@ -1275,31 +1285,58 @@ function deleteSelectedNote() {
   renderScore();
 }
 
-function drawStaff(svg, noteCount) {
+function drawClef(svg, bottomLineY, clefType) {
+  const clef = clefType === "bass" ? "𝄢" : "𝄞";
+  const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
+  svg.appendChild(createSvgElement("text", { x: 52, y: bottomLineY - 20, class: className })).textContent = clef;
+}
+
+function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
   const startX = SCORE.left - 30;
   const endX = SCORE.width - SCORE.right + 10;
 
   for (let i = 0; i < 5; i++) {
-    const y = SCORE.bottomLineY - i * SCORE.staffGap;
-    svg.appendChild(createSvgElement("line", { x1: startX, y1: y, x2: endX, y2: y, class: "staff-line" }));
+    const y = bottomLineY - i * SCORE.staffGap;
+    svg.appendChild(createSvgElement("line", {
+      x1: startX,
+      y1: y,
+      x2: endX,
+      y2: y,
+      class: "staff-line"
+    }));
   }
 
-  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY - 25, class: "voice-label" })).textContent = "Counterpoint";
-  svg.appendChild(createSvgElement("text", { x: 22, y: SCORE.bottomLineY + 58, class: "voice-label" })).textContent = "Cantus";
+  drawClef(svg, bottomLineY, clefType);
+
+  svg.appendChild(createSvgElement("text", {
+    x: 22,
+    y: bottomLineY - 58,
+    class: "voice-label"
+  })).textContent = label;
 
   const positions = getScorePositions(noteCount);
 
   positions.forEach((x, i) => {
-    svg.appendChild(createSvgElement("circle", { cx: x, cy: SCORE.bottomLineY + 65, r: 2.8, class: "slot-marker" }));
-    svg.appendChild(createSvgElement("text", { x: x - 4, y: SCORE.bottomLineY + 92, class: "note-label" })).textContent = i + 1;
+    svg.appendChild(createSvgElement("circle", {
+      cx: x,
+      cy: bottomLineY + 56,
+      r: 2.6,
+      class: "slot-marker"
+    }));
+
+    svg.appendChild(createSvgElement("text", {
+      x: x - 4,
+      y: bottomLineY + 82,
+      class: "note-label"
+    })).textContent = i + 1;
 
     if (i > 0) {
       const midX = (positions[i - 1] + x) / 2;
       svg.appendChild(createSvgElement("line", {
         x1: midX,
-        y1: SCORE.bottomLineY - 52,
+        y1: bottomLineY - 50,
         x2: midX,
-        y2: SCORE.bottomLineY + 78,
+        y2: bottomLineY + 66,
         class: "measure-line"
       }));
     }
@@ -1453,14 +1490,15 @@ function renderScore() {
   if (playbackIndex >= noteCount) playbackIndex = 0;
   if (playbackIndex < 0) playbackIndex = 0;
 
-  drawStaff(svg, noteCount);
+  drawStaff(svg, SCORE.bottomLineY, "Counterpoint / treble clef", noteCount, "treble");
+  drawStaff(svg, SCORE.cantusBottomLineY, "Cantus / bass clef", noteCount, "bass");
   drawPlayhead(svg, positions, noteCount);
 
-  cantus.forEach((note, i) => drawNote(svg, note, positions[i], "cantus", i));
+  cantus.forEach((note, i) => drawNote(svg, note, positions[i], "cantus", i, SCORE.cantusBottomLineY));
 
   counterpoint.forEach((note, i) => {
     if (note) {
-      drawNote(svg, note, positions[i], "counterpoint", i);
+      drawNote(svg, note, positions[i], "counterpoint", i, SCORE.bottomLineY);
     }
   });
 

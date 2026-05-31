@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Counterpoint Tools｜Atelier Composition Son</title>
-  <meta name="description" content="第一種2声・3声対位法を練習するためのオンラインチェッカーです。" />
+  <title>Counterpoint Practice Tools｜Atelier Composition Son</title>
+  <meta
+    name="description"
+    content="第一種2声対位法、二分音符対位法、四分音符対位法、3声対位法を練習するためのオンラインツールです。"
+  />
 
   <style>
     :root {
@@ -14,6 +17,8 @@
       --muted: #666666;
       --line: rgba(0, 0, 0, 0.14);
       --card: rgba(255, 255, 255, 0.72);
+      --card-strong: rgba(255, 255, 255, 0.88);
+      --shadow: rgba(0, 0, 0, 0.06);
     }
 
     * {
@@ -32,13 +37,15 @@
         "Hiragino Kaku Gothic ProN",
         Meiryo,
         sans-serif;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.78), transparent 34rem),
+        var(--bg);
       color: var(--text);
       line-height: 1.7;
     }
 
     .page {
-      width: min(1040px, calc(100% - 32px));
+      width: min(1120px, calc(100% - 32px));
       margin: 0 auto;
       padding: 64px 0 88px;
     }
@@ -60,6 +67,7 @@
       margin: 0;
       color: var(--muted);
       font-size: 0.92rem;
+      letter-spacing: 0.02em;
     }
 
     .language-control {
@@ -93,21 +101,44 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(2.4rem, 7vw, 5.8rem);
+      max-width: 980px;
+      font-size: clamp(2.35rem, 7vw, 5.8rem);
       line-height: 0.98;
       letter-spacing: -0.07em;
-      max-width: 900px;
     }
 
     .lead {
-      max-width: 760px;
+      max-width: 830px;
       margin: 28px 0 0;
       color: var(--muted);
       font-size: 1.05rem;
     }
 
     .sublead {
-      margin-top: 18px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-end;
+      margin-top: 38px;
+      margin-bottom: 16px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      line-height: 1.12;
+      letter-spacing: -0.045em;
+    }
+
+    .section-heading p {
+      max-width: 520px;
+      margin: 0;
       color: var(--muted);
       font-size: 0.92rem;
     }
@@ -116,17 +147,17 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
-      margin-top: 34px;
     }
 
     .card {
       display: flex;
       flex-direction: column;
-      min-height: 320px;
+      min-height: 330px;
       padding: 26px;
       border: 1px solid var(--line);
       border-radius: 24px;
       background: var(--card);
+      box-shadow: 0 12px 28px var(--shadow);
       text-decoration: none;
       color: var(--text);
       transition:
@@ -137,8 +168,8 @@
 
     .card:hover {
       transform: translateY(-3px);
-      border-color: rgba(0, 0, 0, 0.3);
-      background: rgba(255, 255, 255, 0.86);
+      border-color: rgba(0, 0, 0, 0.32);
+      background: var(--card-strong);
     }
 
     .card-top {
@@ -161,6 +192,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       white-space: nowrap;
+      background: rgba(255, 255, 255, 0.48);
     }
 
     .arrow {
@@ -169,9 +201,9 @@
       color: var(--muted);
     }
 
-    .card h2 {
+    .card h3 {
       margin: 0;
-      font-size: clamp(1.6rem, 3vw, 2.5rem);
+      font-size: clamp(1.55rem, 3vw, 2.45rem);
       line-height: 1.05;
       letter-spacing: -0.055em;
     }
@@ -201,6 +233,31 @@
       font-size: 0.78rem;
     }
 
+    .structure {
+      margin-top: 34px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.54);
+    }
+
+    .structure h2 {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+    }
+
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--text);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
     .footer {
       margin-top: 42px;
       padding-top: 24px;
@@ -209,15 +266,23 @@
       font-size: 0.88rem;
     }
 
-    @media (max-width: 820px) {
+    @media (max-width: 860px) {
       .page {
-        width: min(100% - 24px, 1040px);
+        width: min(100% - 24px, 1120px);
         padding-top: 36px;
         padding-bottom: 64px;
       }
 
       .header {
         padding-top: 36px;
+      }
+
+      .section-heading {
+        display: block;
+      }
+
+      .section-heading p {
+        margin-top: 8px;
       }
 
       .grid {
@@ -231,7 +296,7 @@
 
     @media (max-width: 520px) {
       .page {
-        width: min(100% - 18px, 1040px);
+        width: min(100% - 18px, 1120px);
       }
 
       .top-controls {
@@ -248,8 +313,9 @@
         width: 100%;
       }
 
-      .card {
-        padding: 22px;
+      .card,
+      .structure {
+        padding: 20px;
         border-radius: 20px;
       }
 
@@ -278,29 +344,76 @@
       <p class="eyebrow">Counterpoint Practice Tools</p>
       <h1 data-i18n="title">対位法練習ツール</h1>
       <p class="lead" data-i18n="lead">
-        第一種対位法をブラウザ上で練習するためのオンラインツールです。
-        2声版と3声版を選択できます。
+        第一種2声対位法から、二分音符対位法、四分音符対位法、3声対位法までをブラウザ上で練習するためのオンラインツールです。
       </p>
       <p class="sublead" data-i18n="sublead">
         各ページ内でも日本語 / フランス語を切り替えられます。
       </p>
     </header>
 
-    <section class="grid" aria-label="Counterpoint tools">
+    <section class="section-heading" aria-labelledby="twoVoiceHeading">
+      <div>
+        <p class="eyebrow">Two voices</p>
+        <h2 id="twoVoiceHeading" data-i18n="twoVoiceHeading">2声対位法モジュール</h2>
+      </div>
+      <p data-i18n="twoVoiceNote">
+        Module 1から順に、1対1、二分音符、四分音符へ進みます。
+      </p>
+    </section>
+
+    <section class="grid" aria-label="Two voice counterpoint modules">
       <a class="card" href="counterpoint-checker.html">
         <div class="card-top">
-          <span class="tag" data-i18n="twoTag">2声</span>
+          <span class="tag" data-i18n="module1Tag">Module 1</span>
           <span class="arrow">↗</span>
         </div>
 
-        <h2 data-i18n="twoTitle">第一種2声対位法チェッカー</h2>
-        <p data-i18n="twoDescription">
-          定旋律に対して1つの対旋律を入力し、協和音程、連続5度、連続8度などを確認します。
+        <h3 data-i18n="module1Title">第一種2声対位法</h3>
+        <p data-i18n="module1Description">
+          定旋律1音に対して、対旋律1音を置きます。協和音程、連続5度、連続8度を確認します。
         </p>
 
         <div class="features">
-          <span class="feature" data-i18n="featureTwoVoices">2 voices</span>
+          <span class="feature" data-i18n="featureOneToOne">1 : 1</span>
           <span class="feature" data-i18n="featureBilingual">日本語 / Français</span>
+          <span class="feature" data-i18n="featurePlayback">再生</span>
+          <span class="feature" data-i18n="featureLevels">レベル</span>
+        </div>
+      </a>
+
+      <a class="card" href="module2/module2-halfnote-counterpoint.html">
+        <div class="card-top">
+          <span class="tag" data-i18n="module2Tag">Module 2</span>
+          <span class="arrow">↗</span>
+        </div>
+
+        <h3 data-i18n="module2Title">二分音符対位法</h3>
+        <p data-i18n="module2Description">
+          定旋律1音に対して、対旋律を二分音符2つで入力します。タイでつながれた音は扱いません。
+        </p>
+
+        <div class="features">
+          <span class="feature" data-i18n="featureTwoPerNote">2 notes / cantus</span>
+          <span class="feature" data-i18n="featureNoTies">タイなし</span>
+          <span class="feature" data-i18n="featurePlayback">再生</span>
+          <span class="feature" data-i18n="featureLevels">レベル</span>
+        </div>
+      </a>
+
+      <a class="card" href="module3/module3-quarter-counterpoint.html">
+        <div class="card-top">
+          <span class="tag" data-i18n="module3Tag">Module 3</span>
+          <span class="arrow">↗</span>
+        </div>
+
+        <h3 data-i18n="module3Title">四分音符対位法</h3>
+        <p data-i18n="module3Description">
+          定旋律1音に対して、対旋律を四分音符4つで入力します。弱拍の経過音・補助音も確認します。
+        </p>
+
+        <div class="features">
+          <span class="feature" data-i18n="featureFourPerNote">4 notes / cantus</span>
+          <span class="feature" data-i18n="featureNoTies">タイなし</span>
           <span class="feature" data-i18n="featurePlayback">再生</span>
           <span class="feature" data-i18n="featureLevels">レベル</span>
         </div>
@@ -308,22 +421,54 @@
 
       <a class="card" href="three-voice/three-voice-counterpoint.html">
         <div class="card-top">
-          <span class="tag" data-i18n="threeTag">3声</span>
+          <span class="tag" data-i18n="threeVoiceTag">Three voices</span>
           <span class="arrow">↗</span>
         </div>
 
-        <h2 data-i18n="threeTitle">第一種3声対位法チェッカー</h2>
-        <p data-i18n="threeDescription">
-          定旋律に対して2つの対旋律を入力し、3声間の協和音程と声部ペアごとの連続完全音程を確認します。
+        <h3 data-i18n="threeVoiceTitle">第一種3声対位法</h3>
+        <p data-i18n="threeVoiceDescription">
+          定旋律に対して2つの対旋律を入力します。3つの声部をそれぞれ独立した楽譜で表示します。
         </p>
 
         <div class="features">
           <span class="feature" data-i18n="featureThreeVoices">3 voices</span>
-          <span class="feature" data-i18n="featureVoiceSelect">声部選択</span>
+          <span class="feature" data-i18n="featureSeparateScores">声部別楽譜</span>
           <span class="feature" data-i18n="featurePlayback">再生</span>
           <span class="feature" data-i18n="featureLevels">レベル</span>
         </div>
       </a>
+    </section>
+
+    <section class="structure" aria-label="GitHub Pages file structure">
+      <h2 data-i18n="structureTitle">GitHub Pages 推奨配置</h2>
+      <pre><code>index.html
+
+counterpoint-checker.html
+css/
+  style.css
+js/
+  counterpoint.js
+
+module2/
+  module2-halfnote-counterpoint.html
+  css/
+    style.css
+  js/
+    module2-halfnote-counterpoint.js
+
+module3/
+  module3-quarter-counterpoint.html
+  css/
+    style.css
+  js/
+    module3-quarter-counterpoint.js
+
+three-voice/
+  three-voice-counterpoint.html
+  css/
+    style.css
+  js/
+    counterpoint-three-voice.js</code></pre>
     </section>
 
     <footer class="footer">
@@ -338,58 +483,66 @@
       ja: {
         languageLabel: "言語",
         title: "対位法練習ツール",
-        lead: "第一種対位法をブラウザ上で練習するためのオンラインツールです。2声版と3声版を選択できます。",
+        lead: "第一種2声対位法から、二分音符対位法、四分音符対位法、3声対位法までをブラウザ上で練習するためのオンラインツールです。",
         sublead: "各ページ内でも日本語 / フランス語を切り替えられます。",
-        twoTag: "2声",
-        twoTitle: "第一種2声対位法チェッカー",
-        twoDescription: "定旋律に対して1つの対旋律を入力し、協和音程、連続5度、連続8度などを確認します。",
-        threeTag: "3声",
-        threeTitle: "第一種3声対位法チェッカー",
-        threeDescription: "定旋律に対して2つの対旋律を入力し、3声間の協和音程と声部ペアごとの連続完全音程を確認します。",
-        featureTwoVoices: "2 voices",
-        featureThreeVoices: "3 voices",
+        twoVoiceHeading: "2声対位法モジュール",
+        twoVoiceNote: "Module 1から順に、1対1、二分音符、四分音符へ進みます。",
+        module1Tag: "Module 1",
+        module1Title: "第一種2声対位法",
+        module1Description: "定旋律1音に対して、対旋律1音を置きます。協和音程、連続5度、連続8度を確認します。",
+        module2Tag: "Module 2",
+        module2Title: "二分音符対位法",
+        module2Description: "定旋律1音に対して、対旋律を二分音符2つで入力します。タイでつながれた音は扱いません。",
+        module3Tag: "Module 3",
+        module3Title: "四分音符対位法",
+        module3Description: "定旋律1音に対して、対旋律を四分音符4つで入力します。弱拍の経過音・補助音も確認します。",
+        threeVoiceTag: "Three voices",
+        threeVoiceTitle: "第一種3声対位法",
+        threeVoiceDescription: "定旋律に対して2つの対旋律を入力します。3つの声部をそれぞれ独立した楽譜で表示します。",
+        featureOneToOne: "1 : 1",
+        featureTwoPerNote: "2 notes / cantus",
+        featureFourPerNote: "4 notes / cantus",
         featureBilingual: "日本語 / Français",
         featurePlayback: "再生",
         featureLevels: "レベル",
-        featureVoiceSelect: "声部選択",
+        featureNoTies: "タイなし",
+        featureThreeVoices: "3 voices",
+        featureSeparateScores: "声部別楽譜",
+        structureTitle: "GitHub Pages 推奨配置",
         footer: "© Atelier Composition Son｜Composition, music theory, and creative listening."
       },
       fr: {
         languageLabel: "Langue",
         title: "Outils de pratique du contrepoint",
-        lead: "Outils en ligne pour pratiquer le contrepoint de première espèce dans le navigateur. Vous pouvez choisir la version à deux voix ou à trois voix.",
+        lead: "Outils en ligne pour pratiquer le contrepoint à deux voix, le contrepoint en blanches, le contrepoint en noires et le contrepoint à trois voix directement dans le navigateur.",
         sublead: "Chaque page peut également être affichée en japonais ou en français.",
-        twoTag: "2 voix",
-        twoTitle: "Correcteur de contrepoint à deux voix",
-        twoDescription: "Saisissez un contrepoint au-dessus d’un cantus et vérifiez les consonances, les quintes parallèles et les octaves parallèles.",
-        threeTag: "3 voix",
-        threeTitle: "Correcteur de contrepoint à trois voix",
-        threeDescription: "Saisissez deux voix de contrepoint au-dessus d’un cantus et vérifiez les consonances entre les trois voix ainsi que les parallélismes parfaits.",
-        featureTwoVoices: "2 voix",
-        featureThreeVoices: "3 voix",
+        twoVoiceHeading: "Modules de contrepoint à deux voix",
+        twoVoiceNote: "Les modules progressent de 1 contre 1 vers les blanches, puis les noires.",
+        module1Tag: "Module 1",
+        module1Title: "Contrepoint à deux voix — première espèce",
+        module1Description: "Placez une note de contrepoint contre chaque note du cantus. Vérifiez les consonances, les quintes parallèles et les octaves parallèles.",
+        module2Tag: "Module 2",
+        module2Title: "Contrepoint en blanches",
+        module2Description: "Pour chaque note du cantus, saisissez deux blanches dans le contrepoint. Les notes liées ne sont pas utilisées.",
+        module3Tag: "Module 3",
+        module3Title: "Contrepoint en noires",
+        module3Description: "Pour chaque note du cantus, saisissez quatre noires. Le module vérifie aussi les notes de passage et les notes auxiliaires sur les temps faibles.",
+        threeVoiceTag: "Trois voix",
+        threeVoiceTitle: "Contrepoint à trois voix — première espèce",
+        threeVoiceDescription: "Saisissez deux voix de contrepoint au-dessus d’un cantus. Chaque voix est affichée sur une portée indépendante.",
+        featureOneToOne: "1 : 1",
+        featureTwoPerNote: "2 notes / cantus",
+        featureFourPerNote: "4 notes / cantus",
         featureBilingual: "日本語 / Français",
         featurePlayback: "Lecture",
         featureLevels: "Niveaux",
-        featureVoiceSelect: "Choix de la voix",
+        featureNoTies: "Sans liaisons",
+        featureThreeVoices: "3 voix",
+        featureSeparateScores: "Portées séparées",
+        structureTitle: "Organisation recommandée pour GitHub Pages",
         footer: "© Atelier Composition Son｜Composition, théorie musicale et écoute créative."
       }
     };
-
-    <a href="counterpoint-checker.html">
-  Module 1｜第一種2声対位法
-</a>
-
-<a href="module2/module2-halfnote-counterpoint.html">
-  Module 2｜二分音符対位法
-</a>
-
-<a href="module3/module3-quarter-counterpoint.html">
-  Module 3｜四分音符対位法
-</a>
-
-<a href="three-voice/three-voice-counterpoint.html">
-  第一種3声対位法
-</a>
 
     function setLanguage(lang) {
       const dictionary = I18N[lang] || I18N.ja;

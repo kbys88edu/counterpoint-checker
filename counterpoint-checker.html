@@ -13,10 +13,21 @@
 <body>
   <main class="page">
     <header class="checker-header">
-      <a class="back-link" href="index.html">← トップへ戻る</a>
+      <div class="top-controls">
+        <a class="back-link" href="index.html" data-i18n="backLink">← トップへ戻る</a>
+
+        <label class="language-control" for="languageSelect">
+          <span data-i18n="languageLabel">言語</span>
+          <select id="languageSelect" onchange="setLanguage(this.value)">
+            <option value="ja">日本語</option>
+            <option value="fr">Français</option>
+          </select>
+        </label>
+      </div>
+
       <p class="eyebrow">First Species Counterpoint</p>
-      <h1>第一種2声対位法チェッカー</h1>
-      <p class="lead">
+      <h1 data-i18n="title">第一種2声対位法チェッカー</h1>
+      <p class="lead" data-i18n="lead">
         五線譜をクリックして対旋律を入力します。↑で半音上行、↓で半音下行、← / → で前後の音へ移動します。
         スペースキーで定旋律と対旋律を同時に再生・停止できます。
       </p>
@@ -52,23 +63,23 @@
       </div>
 
       <div class="score-tools">
-        <button class="button small" type="button" onclick="setExample()">
+        <button class="button small" type="button" onclick="setExample()" data-i18n="loadExample">
           例題を読み込む
         </button>
 
-        <button class="button small" type="button" onclick="undoCounterpointNote()">
+        <button class="button small" type="button" onclick="undoCounterpointNote()" data-i18n="deleteLast">
           最後の音を削除
         </button>
 
-        <button class="button small" type="button" onclick="clearCounterpoint()">
+        <button class="button small" type="button" onclick="clearCounterpoint()" data-i18n="clearCounterpoint">
           対旋律をクリア
         </button>
 
-        <button class="button small" type="button" onclick="renderScore()">
+        <button class="button small" type="button" onclick="renderScore()" data-i18n="refreshScore">
           楽譜を更新
         </button>
 
-        <button class="button small" type="button" onclick="playSelectedNote()">
+        <button class="button small" type="button" onclick="playSelectedNote()" data-i18n="playSelected">
           選択音を鳴らす
         </button>
       </div>
@@ -78,7 +89,7 @@
           再生
         </button>
 
-        <button class="button small" type="button" onclick="stopPlayback(true)">
+        <button class="button small" type="button" onclick="stopPlayback(true)" data-i18n="resetStart">
           最初に戻す
         </button>
 
@@ -87,19 +98,28 @@
           <input id="tempoInput" type="number" min="40" max="180" value="72" />
         </label>
 
-        <label class="timbre-control" for="timbreSelect">
-          音色
-          <select id="timbreSelect" onchange="previewTimbre()">
-            <option value="sine">Sine / 柔らかい</option>
-            <option value="triangle" selected>Triangle / 素直</option>
-            <option value="square">Square / 電子的</option>
-            <option value="sawtooth">Sawtooth / 明るい</option>
-            <option value="organ">Organ / オルガン風</option>
-            <option value="bell">Bell / ベル風</option>
+        <label class="playback-control" for="playbackModeSelect">
+          <span data-i18n="playbackModeLabel">再生対象</span>
+          <select id="playbackModeSelect">
+            <option value="both" data-i18n="playBoth">両声</option>
+            <option value="cantus" data-i18n="playCantus">定旋律のみ</option>
+            <option value="counterpoint" data-i18n="playCounterpoint">対旋律のみ</option>
           </select>
         </label>
 
-        <p class="playback-hint">
+        <label class="timbre-control" for="timbreSelect">
+          <span data-i18n="timbreLabel">音色</span>
+          <select id="timbreSelect" onchange="previewTimbre()">
+            <option value="sine" data-i18n="timbreSine">Sine / 柔らかい</option>
+            <option value="triangle" selected data-i18n="timbreTriangle">Triangle / 素直</option>
+            <option value="square" data-i18n="timbreSquare">Square / 電子的</option>
+            <option value="sawtooth" data-i18n="timbreSaw">Sawtooth / 明るい</option>
+            <option value="organ" data-i18n="timbreOrgan">Organ / オルガン風</option>
+            <option value="bell" data-i18n="timbreBell">Bell / ベル風</option>
+          </select>
+        </label>
+
+        <p class="playback-hint" data-i18n="playbackHint">
           Space：再生 / 停止　｜　← / →：前後の音へ移動
         </p>
       </div>
@@ -107,8 +127,8 @@
       <div class="score-box">
         <div class="score-head">
           <div>
-            <h2>五線入力</h2>
-            <p>
+            <h2 data-i18n="scoreInputTitle">五線入力</h2>
+            <p data-i18n="scoreInputHelp">
               五線をクリックして音を置きます。置いた音は青色で選択され、↑↓で半音移動、←→で前後の音へ移動できます。
             </p>
           </div>
@@ -128,19 +148,19 @@
       </div>
 
       <div class="current-notes">
-        <h2>現在の入力</h2>
-        <p><strong>定旋律：</strong><span id="cantusDisplay"></span></p>
-        <p><strong>対旋律：</strong><span id="counterpointDisplay"></span></p>
+        <h2 data-i18n="currentInput">現在の入力</h2>
+        <p><strong data-i18n="cantusLabel">定旋律：</strong><span id="cantusDisplay"></span></p>
+        <p><strong data-i18n="counterpointLabel">対旋律：</strong><span id="counterpointDisplay"></span></p>
       </div>
 
-      <button class="button primary" onclick="analyzeCounterpoint()">
+      <button class="button primary" onclick="analyzeCounterpoint()" data-i18n="analyze">
         解析する
       </button>
     </section>
 
     <section class="result-section">
-      <h2>解析結果</h2>
-      <div id="summary" class="summary-box">
+      <h2 data-i18n="analysisResult">解析結果</h2>
+      <div id="summary" class="summary-box" data-i18n="notAnalyzed">
         まだ解析していません。
       </div>
       <div id="result" class="result-list"></div>

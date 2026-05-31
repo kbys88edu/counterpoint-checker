@@ -9,6 +9,7 @@
   --ok: #1f7a3f;
   --warn: #9a6a00;
   --error: #b3261e;
+  --selected: #b3261e;
 }
 
 * {
@@ -191,7 +192,7 @@ pre {
 }
 
 /* =========================
-   FORM
+   FORM / HIDDEN INPUT
 ========================= */
 
 .checker-panel {
@@ -227,7 +228,6 @@ textarea:focus {
   outline-offset: 2px;
 }
 
-/* 解析用textareaを画面から隠す */
 .hidden-input {
   position: absolute;
   left: -9999px;
@@ -292,7 +292,15 @@ textarea:focus {
   border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-/* SVG staff */
+.score-editor:focus {
+  outline: 2px solid rgba(179, 38, 30, 0.35);
+  outline-offset: 4px;
+}
+
+/* =========================
+   SVG STAFF
+========================= */
+
 .staff-line {
   stroke: #181818;
   stroke-width: 1.2;
@@ -324,6 +332,7 @@ textarea:focus {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
+/* 音符 */
 .note-head {
   fill: #181818;
   stroke: #181818;
@@ -344,10 +353,40 @@ textarea:focus {
   stroke: rgba(0, 0, 0, 0.35);
 }
 
+/* 選択中の音符 */
+.selected-note-ring {
+  fill: none;
+  stroke: var(--selected);
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+/* シャープ・フラット記号 */
 .accidental {
-  font-size: 18px;
+  font-size: 20px;
   fill: #181818;
-  font-family: serif;
+  font-family:
+    "Times New Roman",
+    "Hiragino Mincho ProN",
+    "Yu Mincho",
+    serif;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.accidental.cantus {
+  fill: rgba(0, 0, 0, 0.35);
+}
+
+/* 将来、フラット表示とシャープ表示を色分けしたい場合用 */
+.accidental.flat,
+.accidental.sharp {
+  fill: #181818;
+}
+
+.accidental.flat.cantus,
+.accidental.sharp.cantus {
+  fill: rgba(0, 0, 0, 0.35);
 }
 
 /* =========================

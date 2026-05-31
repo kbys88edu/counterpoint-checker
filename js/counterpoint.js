@@ -36,6 +36,11 @@ const I18N = {
     title: "第一種2声対位法チェッカー",
     lead: "五線譜をクリックして対旋律を入力します。↑で半音上行、↓で半音下行、← / → で前後の音へ移動します。スペースキーで定旋律と対旋律を同時に再生・停止できます。",
     exerciseLabel: "課題",
+    levelFilterLabel: "レベル",
+    levelAll: "すべて",
+    levelBeginner: "初級",
+    levelIntermediate: "中級",
+    levelAdvanced: "上級",
     loadExercise: "課題を読み込む",
     loadExample: "例題を読み込む",
     deleteLast: "最後の音を削除",
@@ -108,6 +113,11 @@ const I18N = {
     title: "Correcteur de contrepoint à deux voix — première espèce",
     lead: "Cliquez sur la portée pour saisir le contrepoint. ↑ monte d’un demi-ton, ↓ descend d’un demi-ton, ← / → déplace la sélection. La barre d’espace lance ou arrête la lecture.",
     exerciseLabel: "Exercice",
+    levelFilterLabel: "Niveau",
+    levelAll: "Tous",
+    levelBeginner: "Débutant",
+    levelIntermediate: "Intermédiaire",
+    levelAdvanced: "Avancé",
     loadExercise: "Charger l’exercice",
     loadExample: "Charger l’exemple",
     deleteLast: "Supprimer la dernière note",
@@ -179,27 +189,30 @@ const I18N = {
 const EXERCISES = [
   {
     id: "species1-c-major-01",
-    title: { ja: "第一種 C major 01", fr: "Première espèce — Do majeur 01" },
+    level: "beginner",
+    title: { ja: "初級 01｜C major｜順次進行", fr: "Débutant 01｜Do majeur｜Mouvement conjoint" },
     description: {
-      ja: "基本的な山型。順次進行中心の定旋律です。",
-      fr: "Forme en arche, principalement conjointe."
+      ja: "ほぼ順次進行のみの基本課題。ひとつの山を作ります。",
+      fr: "Exercice fondamental, presque entièrement conjoint, avec une seule arche."
     },
     cantus: ["C4", "D4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
     counterpoint: []
   },
   {
     id: "species1-c-major-02",
-    title: { ja: "第一種 C major 02", fr: "Première espèce — Do majeur 02" },
+    level: "beginner",
+    title: { ja: "初級 02｜C major｜短い山型", fr: "Débutant 02｜Do majeur｜Petite arche" },
     description: {
-      ja: "小さな跳躍を含む練習。跳躍後は反対方向に戻ります。",
-      fr: "Exercice avec petits sauts, compensés par un mouvement contraire."
+      ja: "短めの課題。終止に向けて自然に下行します。",
+      fr: "Exercice court, avec une descente naturelle vers la cadence."
     },
-    cantus: ["C4", "E4", "D4", "F4", "G4", "A4", "G4", "E4", "F4", "D4", "C4"],
+    cantus: ["C4", "D4", "E4", "G4", "F4", "E4", "D4", "C4"],
     counterpoint: []
   },
   {
     id: "species1-g-major-01",
-    title: { ja: "第一種 G major 01", fr: "Première espèce — Sol majeur 01" },
+    level: "beginner",
+    title: { ja: "初級 03｜G major｜F#あり", fr: "Débutant 03｜Sol majeur｜Avec Fa#" },
     description: {
       ja: "G majorの基本課題。F#を含みます。",
       fr: "Exercice de base en Sol majeur, avec Fa#."
@@ -209,7 +222,8 @@ const EXERCISES = [
   },
   {
     id: "species1-f-major-01",
-    title: { ja: "第一種 F major 01", fr: "Première espèce — Fa majeur 01" },
+    level: "beginner",
+    title: { ja: "初級 04｜F major｜Bbあり", fr: "Débutant 04｜Fa majeur｜Avec Sib" },
     description: {
       ja: "F majorの基本課題。Bbを含みます。",
       fr: "Exercice de base en Fa majeur, avec Sib."
@@ -218,17 +232,96 @@ const EXERCISES = [
     counterpoint: []
   },
   {
-    id: "species1-a-minor-01",
-    title: { ja: "第一種 A minor 01", fr: "Première espèce — La mineur 01" },
+    id: "species1-c-major-03",
+    level: "intermediate",
+    title: { ja: "中級 01｜C major｜3度跳躍", fr: "Intermédiaire 01｜Do majeur｜Sauts de tierce" },
     description: {
-      ja: "自然短音階に近い短調課題です。",
-      fr: "Exercice en mineur, proche du mineur naturel."
+      ja: "3度跳躍を含む課題。跳躍後の反対方向への回復を確認します。",
+      fr: "Inclut des sauts de tierce, compensés par un mouvement contraire."
+    },
+    cantus: ["C4", "E4", "D4", "F4", "G4", "A4", "G4", "E4", "F4", "D4", "C4"],
+    counterpoint: []
+  },
+  {
+    id: "species1-c-major-04",
+    level: "intermediate",
+    title: { ja: "中級 02｜C major｜低音域", fr: "Intermédiaire 02｜Do majeur｜Registre grave" },
+    description: {
+      ja: "低めの音域から始まる課題。音域のバランスに注意します。",
+      fr: "Commence dans un registre plus grave. Travail sur l’équilibre de tessiture."
+    },
+    cantus: ["C3", "D3", "F3", "E3", "G3", "A3", "G3", "F3", "E3", "D3", "C3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-a-minor-01",
+    level: "intermediate",
+    title: { ja: "中級 03｜A minor｜自然短音階", fr: "Intermédiaire 03｜La mineur｜Mineur naturel" },
+    description: {
+      ja: "自然短音階に近い短調課題です。終止音程に注意してください。",
+      fr: "Exercice en mineur naturel. Attention à l’intervalle final."
     },
     cantus: ["A3", "B3", "C4", "D4", "E4", "F4", "E4", "D4", "C4", "B3", "A3"],
     counterpoint: []
   },
   {
+    id: "species1-d-minor-01",
+    level: "intermediate",
+    title: { ja: "中級 04｜D minor｜Bbあり", fr: "Intermédiaire 04｜Ré mineur｜Avec Sib" },
+    description: {
+      ja: "D minorの課題。Bbを含み、旋法的な短調の練習になります。",
+      fr: "Exercice en Ré mineur, avec Sib, proche d’un traitement modal."
+    },
+    cantus: ["D4", "E4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "E4", "D4"],
+    counterpoint: []
+  },
+  {
+    id: "species1-c-major-05",
+    level: "advanced",
+    title: { ja: "上級 01｜C major｜長めの旋律", fr: "Avancé 01｜Do majeur｜Mélodie plus longue" },
+    description: {
+      ja: "少し長めの課題。全体の方向性と頂点の扱いを意識します。",
+      fr: "Exercice plus long. Travail sur la direction globale et le sommet mélodique."
+    },
+    cantus: ["C4", "D4", "E4", "G4", "F4", "A4", "G4", "E4", "F4", "D4", "E4", "D4", "C4"],
+    counterpoint: []
+  },
+  {
+    id: "species1-g-major-02",
+    level: "advanced",
+    title: { ja: "上級 02｜G major｜跳躍と回復", fr: "Avancé 02｜Sol majeur｜Sauts et compensations" },
+    description: {
+      ja: "跳躍と順次進行のバランスを取る課題です。",
+      fr: "Exercice sur l’équilibre entre sauts et mouvements conjoints."
+    },
+    cantus: ["G3", "B3", "A3", "C4", "D4", "E4", "D4", "B3", "C4", "A3", "B3", "A3", "G3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-f-major-02",
+    level: "advanced",
+    title: { ja: "上級 03｜F major｜広めの音域", fr: "Avancé 03｜Fa majeur｜Tessiture élargie" },
+    description: {
+      ja: "やや広い音域を使う課題。対旋律の音域管理が難しくなります。",
+      fr: "Tessiture un peu plus large. Le contrôle de la seconde voix devient plus difficile."
+    },
+    cantus: ["F3", "A3", "G3", "Bb3", "C4", "D4", "F4", "E4", "D4", "C4", "Bb3", "G3", "F3"],
+    counterpoint: []
+  },
+  {
+    id: "species1-d-minor-02",
+    level: "advanced",
+    title: { ja: "上級 04｜D minor｜短調・長め", fr: "Avancé 04｜Ré mineur｜Mineur plus long" },
+    description: {
+      ja: "短調で長めの課題。終止と不協和音程の回避を丁寧に確認します。",
+      fr: "Exercice plus long en mineur. Vérifiez soigneusement la cadence et les dissonances."
+    },
+    cantus: ["D4", "F4", "E4", "G4", "A4", "Bb4", "A4", "F4", "G4", "E4", "F4", "E4", "D4"],
+    counterpoint: []
+  },
+  {
     id: "species1-example-filled",
+    level: "beginner",
     title: { ja: "入力例つき", fr: "Exemple rempli" },
     description: {
       ja: "動作確認用。対旋律があらかじめ入っています。",
@@ -248,6 +341,16 @@ let audioContext = null;
 
 function t(key) {
   return I18N[currentLanguage][key];
+}
+
+function getLevelName(level) {
+  const map = {
+    beginner: t("levelBeginner"),
+    intermediate: t("levelIntermediate"),
+    advanced: t("levelAdvanced")
+  };
+
+  return map[level] || level;
 }
 
 function setLanguage(lang) {
@@ -368,14 +471,14 @@ function playSelectedNote() {
 
   if (!note) return;
 
-  playNoteName(note, 0.35, 1);
+  playNoteName(note, 0.55, 1);
 }
 
 function previewTimbre() {
   const counterpoint = getNotesFromTextarea("counterpoint");
   const cantus = getNotesFromTextarea("cantus");
   const note = counterpoint[selectedIndex] || cantus[selectedIndex] || "C4";
-  playNoteName(note, 0.3, 1);
+  playNoteName(note, 0.5, 1);
 }
 
 function getTempo() {
@@ -404,7 +507,7 @@ function playVerticalSonority(index) {
   const mode = getPlaybackMode();
 
   const stepDuration = getStepDurationSeconds();
-  const noteDuration = Math.max(0.18, stepDuration * 0.82);
+  const noteDuration = Math.max(0.28, stepDuration * 0.95);
 
   const cantusNote = cantus[index];
   const counterpointNote = counterpoint[index];
@@ -893,7 +996,7 @@ function moveSelectedNote(semitone) {
 
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
-  playNoteName(counterpoint[selectedIndex], 0.25, 1);
+  playNoteName(counterpoint[selectedIndex], 0.45, 1);
 }
 
 /* Left/right changes selectedIndex only. The red playhead stays at playbackIndex. */
@@ -915,7 +1018,7 @@ function moveSelection(delta) {
   const note = counterpoint[selectedIndex];
 
   if (note) {
-    playNoteName(note, 0.18, 0.8);
+    playNoteName(note, 0.35, 0.8);
   }
 }
 
@@ -1143,7 +1246,7 @@ function handleScoreClick(event) {
 
   setNotesToTextarea("counterpoint", counterpoint);
   renderScore();
-  playNoteName(clickedNote, 0.35, 1);
+  playNoteName(clickedNote, 0.55, 1);
 
   svg.focus();
 }
@@ -1171,15 +1274,22 @@ function clearCounterpoint() {
 
 function populateExerciseSelect(keepValue = false) {
   const select = document.getElementById("exerciseSelect");
+  const levelFilter = document.getElementById("levelFilterSelect");
   if (!select) return;
 
   const previousValue = select.value;
+  const selectedLevel = levelFilter ? levelFilter.value : "all";
+
+  const filteredExercises = EXERCISES.filter((exercise) => {
+    return selectedLevel === "all" || exercise.level === selectedLevel;
+  });
+
   select.innerHTML = "";
 
-  EXERCISES.forEach((exercise, index) => {
+  filteredExercises.forEach((exercise, index) => {
     const option = document.createElement("option");
     option.value = exercise.id;
-    option.textContent = exercise.title[currentLanguage] || exercise.title.ja;
+    option.textContent = `${getLevelName(exercise.level)}｜${exercise.title[currentLanguage] || exercise.title.ja}`;
 
     if ((keepValue && previousValue === exercise.id) || (!keepValue && index === 0)) {
       option.selected = true;
@@ -1187,6 +1297,10 @@ function populateExerciseSelect(keepValue = false) {
 
     select.appendChild(option);
   });
+
+  if (!filteredExercises.some((exercise) => exercise.id === select.value) && filteredExercises.length) {
+    select.value = filteredExercises[0].id;
+  }
 
   updateExerciseDescription();
 }
@@ -1204,7 +1318,10 @@ function updateExerciseDescription() {
 
   if (!description || !exercise) return;
 
-  description.textContent = exercise.description[currentLanguage] || exercise.description.ja;
+  description.innerHTML = `
+    <span class="level-badge ${exercise.level}">${getLevelName(exercise.level)}</span>
+    ${exercise.description[currentLanguage] || exercise.description.ja}
+  `;
 }
 
 function loadSelectedExercise() {
@@ -1287,6 +1404,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const exerciseSelect = document.getElementById("exerciseSelect");
   if (exerciseSelect) {
     exerciseSelect.addEventListener("change", updateExerciseDescription);
+  }
+
+  const levelFilterSelect = document.getElementById("levelFilterSelect");
+  if (levelFilterSelect) {
+    levelFilterSelect.addEventListener("change", () => populateExerciseSelect(false));
   }
 
   const languageSelect = document.getElementById("languageSelect");

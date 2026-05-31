@@ -899,7 +899,7 @@ function deleteSelectedNote() {
 function drawClef(svg, bottomLineY, clefType) {
   const clef = clefType === "bass" ? "𝄢" : "𝄞";
   const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
-  const y = clefType === "bass" ? bottomLineY - 20 : bottomLineY - 20;
+  const y = bottomLineY - 20;
 
   svg.appendChild(createSvgElement("text", {
     x: 52,
@@ -1025,26 +1025,28 @@ function drawNote(svg, note, x, voice, index, bottomLineY, duration = "quarter")
   drawLedgerLines(svg, x, y, bottomLineY);
   drawAccidental(svg, parsed, x, y, isCantus, isSelected, isCurrentPlayback);
 
-  svg.appendChild(createSvgElement("ellipse", {
-    cx: x,
-    cy: y,
-    rx: 8.5,
-    ry: 5.8,
-    transform: `rotate(-18 ${x} ${y})`,
-    class: isCantus
-      ? isCurrentPlayback ? "note-head cantus playing" : "note-head cantus"
-      : isCurrentPlayback ? "note-head playing" : isSelected ? "note-head selected" : "note-head"
-  }));
-
+  // Module 3:
+  // - cantus: whole note = open notehead, no stem
+  // - counterpoint: quarter note = filled notehead + stem + flag
   if (isCantus) {
-    svg.appendChild(createSvgElement("line", {
-      x1: x - 7,
-      y1: y,
-      x2: x - 7,
-      y2: y + 34,
-      class: isCurrentPlayback ? "note-stem cantus playing" : "note-stem cantus"
+    svg.appendChild(createSvgElement("ellipse", {
+      cx: x,
+      cy: y,
+      rx: 8.8,
+      ry: 5.8,
+      transform: `rotate(-18 ${x} ${y})`,
+      class: isCurrentPlayback ? "note-head open cantus playing" : "note-head open cantus"
     }));
   } else {
+    svg.appendChild(createSvgElement("ellipse", {
+      cx: x,
+      cy: y,
+      rx: 8.5,
+      ry: 5.8,
+      transform: `rotate(-18 ${x} ${y})`,
+      class: isCurrentPlayback ? "note-head playing" : isSelected ? "note-head selected" : "note-head"
+    }));
+
     svg.appendChild(createSvgElement("line", {
       x1: x + 7,
       y1: y,

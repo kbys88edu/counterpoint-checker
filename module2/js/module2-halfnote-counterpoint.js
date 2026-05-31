@@ -899,7 +899,7 @@ function deleteSelectedNote() {
 function drawClef(svg, bottomLineY, clefType) {
   const clef = clefType === "bass" ? "𝄢" : "𝄞";
   const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
-  const y = clefType === "bass" ? bottomLineY - 20 : bottomLineY - 20;
+  const y = bottomLineY - 20;
 
   svg.appendChild(createSvgElement("text", {
     x: 52,
@@ -1033,6 +1033,9 @@ function drawNote(svg, note, x, voice, index, bottomLineY, duration = "half") {
     isSelected ? "selected" : ""
   ].filter(Boolean).join(" ");
 
+  // Module 2:
+  // - cantus: whole note = open notehead, no stem
+  // - counterpoint: half note = open notehead + stem, no flag
   svg.appendChild(createSvgElement("ellipse", {
     cx: x,
     cy: y,

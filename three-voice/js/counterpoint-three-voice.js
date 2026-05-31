@@ -10,35 +10,35 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 const SCORE = {
   width: 960,
-  height: 520,
+  height: 170,
   left: 105,
   right: 45,
   staffGap: 10,
   noteStep: 5,
-  playheadTop: 40,
-  playheadBottom: 438,
+  playheadTop: 28,
+  playheadBottom: 138,
   staves: {
     counterpoint1: {
       label: "CP1",
-      bottomLineY: 118,
-      labelY: 98,
-      noteLabelY: 56,
+      bottomLineY: 100,
+      labelY: 80,
+      noteLabelY: 34,
       xOffset: 0,
       stemUp: true
     },
     counterpoint2: {
       label: "CP2",
-      bottomLineY: 252,
-      labelY: 232,
-      noteLabelY: 190,
+      bottomLineY: 100,
+      labelY: 80,
+      noteLabelY: 34,
       xOffset: 0,
       stemUp: true
     },
     cantus: {
       label: "Cantus",
-      bottomLineY: 386,
-      labelY: 366,
-      noteLabelY: 448,
+      bottomLineY: 100,
+      labelY: 80,
+      noteLabelY: 152,
       xOffset: 0,
       stemUp: false
     }
@@ -84,7 +84,7 @@ const I18N = {
     timbreBell: "Bell / ベル風",
     playbackHint: "Space：再生 / 停止　｜　← / →：前後の音へ移動",
     scoreInputTitle: "五線入力",
-    scoreInputHelp: "声部を選び、五線譜をクリックして音を置きます。選択声部の音は青色になります。",
+    scoreInputHelp: "第1対旋律・第2対旋律・定旋律を、それぞれ別の楽譜に表示します。第1対旋律と第2対旋律の楽譜をクリックして入力できます。",
     currentInput: "現在の入力",
     cantusLabel: "定旋律：",
     counterpoint1Label: "第1対旋律：",
@@ -166,7 +166,7 @@ const I18N = {
     timbreBell: "Bell / cloche",
     playbackHint: "Espace : lecture / arrêt　｜　← / → : note précédente / suivante",
     scoreInputTitle: "Saisie sur portée",
-    scoreInputHelp: "Choisissez une voix puis cliquez sur la portée. Les notes de la voix sélectionnée sont bleues.",
+    scoreInputHelp: "Chaque voix est affichée sur une portée séparée. Cliquez sur la portée du 1er ou du 2e contrepoint pour saisir les notes.",
     currentInput: "Saisie actuelle",
     cantusLabel: "Cantus :",
     counterpoint1Label: "1er contrepoint :",
@@ -1253,12 +1253,173 @@ function setExample() {
   loadSelectedExercise();
 }
 
+
+function getSvgForVoice(voice) {
+  const ids = {
+    counterpoint1: "scoreEditorCounterpoint1",
+    counterpoint2: "scoreEditorCounterpoint2",
+    cantus: "scoreEditorCantus"
+  };
+
+  return document.getElementById(ids[voice]);
+}
+
+function updateActiveVoiceCards() {
+  document.querySelectorAll(".voice-score-card").forEach((card) => {
+    const voice = card.getAttribute("data-voice");
+    card.classList.toggle("active-edit-voice", voice === editVoice);
+  });
+}
+
+function drawStaffForVoice(svg, noteCount, voice) {
+  const startX = SCORE.left - 30;
+  const endX = SCORE.width - SCORE.right + 10;
+  const positions = getScorePositions(noteCount);
+  const staff = SCORE.staves[voice] || SCORE.staves.counterpoint1;
+
+  for (let i = 0; i < 5; i++) {
+    const y = staff.bottomLineY - i * SCORE.staffGap;
+    svg.appendChild(createSvgElement("line", {
+      x1: startX,
+      y1: y,
+      x2: endX,
+      y2: y,
+      class: "staff-line"
+    }));
+  }
+
+  svg.appendChild(createSvgElement("text", {
+    x: 22,
+    y: staff.labelY,
+    class: "voice-label"
+  })).textContent = staff.label;
+
+  positions.forEach((x, i) => {
+    svg.appendChild(createSvgElement("circle", {
+      cx: x,
+      cy: staff.bottomLineY + 42,
+      r: 2.4,
+      class: "slot-marker"
+    }));
+
+    svg.appendChild(createSvgElement("text", {
+      x: x - 4,
+      y: staff.bottomLineY + 64,
+      class: "note-label"
+    })).textContent = i + 1;
+
+    if (i > 0) {
+      const midX = (positions[i - 1] + x) / 2;
+      svg.appendChild(createSvgElement("line", {
+        x1: midX,
+        y1: SCORE.playheadTop,
+        x2: midX,
+        y2: SCORE.playheadBottom,
+        class: "measure-line"
+      }));
+    }
+  });
+}
+
+function renderVoiceScore(voice, notes, noteCount) {
+  const svg = getSvgForVoice(voice);
+  if (!svg) return;
+
+  clearSvg(svg);
+
+  const positions = getScorePositions(noteCount);
+  drawStaffForVoice(svg, noteCount, voice);
+  drawPlayhead(svg, positions, noteCount);
+
+  notes.forEach((note, i) => {
+    if (note) {
+      drawNote(svg, note, positions[i], voice, i);
+    }
+  });
+}
+
+function renderScore() {
+  const cantus = getNotesFromTextarea("cantus");
+  const cp1 = getNotesFromTextarea("counterpoint1");
+  const cp2 = getNotesFromTextarea("counterpoint2");
+  const noteCount = Math.max(cantus.length, cp1.length, cp2.length, 1);
+
+  if (selectedIndex >= noteCount) selectedIndex = noteCount - 1;
+  if (selectedIndex < 0) selectedIndex = 0;
+  if (playbackIndex >= noteCount) playbackIndex = 0;
+  if (playbackIndex < 0) playbackIndex = 0;
+
+  renderVoiceScore("counterpoint1", cp1, noteCount);
+  renderVoiceScore("counterpoint2", cp2, noteCount);
+  renderVoiceScore("cantus", cantus, noteCount);
+
+  updateActiveVoiceCards();
+  updateDisplays();
+}
+
+function handleVoiceScoreClick(event) {
+  if (isPlaying) return;
+
+  const svg = event.currentTarget;
+  const targetVoice = svg.getAttribute("data-voice");
+
+  if (!["counterpoint1", "counterpoint2"].includes(targetVoice)) return;
+
+  setEditVoice(targetVoice);
+
+  const select = document.getElementById("editVoiceSelect");
+  if (select) {
+    select.value = targetVoice;
+  }
+
+  const rect = svg.getBoundingClientRect();
+  const viewX = ((event.clientX - rect.left) / rect.width) * SCORE.width;
+  const viewY = ((event.clientY - rect.top) / rect.height) * SCORE.height;
+
+  const cantus = getNotesFromTextarea("cantus");
+  let notes = getNotesFromTextarea(targetVoice);
+  const noteCount = Math.max(cantus.length, 1);
+  const positions = getScorePositions(noteCount);
+
+  let nearestIndex = 0;
+  let nearestDistance = Infinity;
+
+  positions.forEach((x, i) => {
+    const distance = Math.abs(x - viewX);
+    if (distance < nearestDistance) {
+      nearestIndex = i;
+      nearestDistance = distance;
+    }
+  });
+
+  const clickedNote = yToNaturalNote(viewY, targetVoice);
+
+  while (notes.length < noteCount) notes.push("");
+
+  selectedIndex = nearestIndex;
+  notes[nearestIndex] = clickedNote;
+
+  setNotesToTextarea(targetVoice, notes);
+  renderScore();
+  playNoteName(clickedNote, 0.55, 1);
+
+  svg.focus();
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   const svg = document.getElementById("scoreEditor");
 
   if (svg) {
     svg.addEventListener("click", handleScoreClick);
   }
+
+
+  ["counterpoint1", "counterpoint2"].forEach((voice) => {
+    const voiceSvg = getSvgForVoice(voice);
+    if (voiceSvg) {
+      voiceSvg.addEventListener("click", handleVoiceScoreClick);
+    }
+  });
 
   document.addEventListener("keydown", (event) => {
     const activeTag = document.activeElement?.tagName?.toLowerCase();

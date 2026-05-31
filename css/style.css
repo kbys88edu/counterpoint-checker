@@ -9,6 +9,7 @@
   --warn: #9a6a00;
   --error: #b3261e;
   --selected: #1d4ed8;
+  --playhead: #e11d48;
 }
 
 * {
@@ -78,7 +79,7 @@ h2 {
 }
 
 .lead {
-  max-width: 760px;
+  max-width: 780px;
   margin: 24px 0 0;
   font-size: 1.05rem;
   color: var(--muted);
@@ -103,11 +104,90 @@ h2 {
   pointer-events: none;
 }
 
-.score-tools {
+.score-tools,
+.playback-tools {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 8px 0 22px;
+  align-items: center;
+}
+
+.exercise-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 22px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.exercise-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.exercise-control select {
+  min-width: 220px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.exercise-description {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.playback-tools {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.playback-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.tempo-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.tempo-control input {
+  width: 70px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  outline: none;
 }
 
 .button {
@@ -229,6 +309,11 @@ h2 {
   font-weight: 700;
 }
 
+.note-label.playing {
+  fill: var(--playhead);
+  font-weight: 700;
+}
+
 /* Notes */
 .note-head {
   fill: #181818;
@@ -246,6 +331,11 @@ h2 {
   stroke: var(--selected);
 }
 
+.note-head.playing {
+  fill: var(--playhead);
+  stroke: var(--playhead);
+}
+
 .note-stem {
   stroke: #181818;
   stroke-width: 1.4;
@@ -257,6 +347,25 @@ h2 {
 
 .note-stem.selected {
   stroke: var(--selected);
+}
+
+.note-stem.playing {
+  stroke: var(--playhead);
+}
+
+/* Playhead */
+.playhead-line {
+  stroke: var(--playhead);
+  stroke-width: 3;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.playhead-halo {
+  fill: rgba(225, 29, 72, 0.08);
+  stroke: rgba(225, 29, 72, 0.22);
+  stroke-width: 1;
+  pointer-events: none;
 }
 
 /* Accidentals */
@@ -278,6 +387,10 @@ h2 {
 
 .accidental.selected {
   fill: var(--selected);
+}
+
+.accidental.playing {
+  fill: var(--playhead);
 }
 
 /* Current input display */
@@ -408,9 +521,22 @@ h2 {
     width: 100%;
   }
 
-  .score-tools {
+  .score-tools,
+  .playback-tools,
+  .exercise-tools {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .tempo-control,
+  .exercise-control {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .exercise-control select {
+    min-width: 0;
+    width: 100%;
   }
 
   h1 {

@@ -14,12 +14,22 @@ const NOTE_LETTER_STEPS = {
   B: 6
 };
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+const SCORE = {
+  width: 960,
+  height: 300,
+  left: 95,
+  right: 45,
+  staffGap: 10,
+  bottomLineY: 145,
+  noteStep: 5
+};
+
 function noteToMidi(note) {
   const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
 
-  if (!match) {
-    return null;
-  }
+  if (!match) return null;
 
   const pitch = match[1].toUpperCase();
   const accidental = match[2] || "";
@@ -37,13 +47,8 @@ function noteToMidi(note) {
 
   let value = base[pitch];
 
-  if (accidental === "#") {
-    value += 1;
-  }
-
-  if (accidental === "b") {
-    value -= 1;
-  }
+  if (accidental === "#") value += 1;
+  if (accidental === "b") value -= 1;
 
   return 12 * (octave + 1) + value;
 }
@@ -51,9 +56,7 @@ function noteToMidi(note) {
 function parseNote(note) {
   const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
 
-  if (!match) {
-    return null;
-  }
+  if (!match) return null;
 
   return {
     letter: match[1].toUpperCase(),
@@ -64,10 +67,7 @@ function parseNote(note) {
 
 function getDiatonicStep(note) {
   const parsed = parseNote(note);
-
-  if (!parsed) {
-    return null;
-  }
+  if (!parsed) return null;
 
   return parsed.octave * 7 + NOTE_LETTER_STEPS[parsed.letter];
 }
@@ -80,13 +80,8 @@ function getIntervalName(semitones) {
   const abs = Math.abs(semitones);
   const simple = abs % 12;
 
-  if (abs === 0) {
-    return "完全1度";
-  }
-
-  if (abs === 12) {
-    return "完全8度";
-  }
+  if (abs === 0) return "完全1度";
+  if (abs === 12) return "完全8度";
 
   const names = {
     0: "完全8度または複合完全音程",
@@ -127,24 +122,47 @@ function direction(a, b) {
 }
 
 function getNotesFromTextarea(id) {
-  const value = document.getElementById(id).value.trim();
+  const el = document.getElementById(id);
+  if (!el) return [];
+
+  const value = el.value.trim();
   if (!value) return [];
+
   return value.split(/\s+/).filter(Boolean);
 }
 
 function setNotesToTextarea(id, notes) {
-  document.getElementById(id).value = notes.filter(Boolean).join(" ");
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.value = notes.filter(Boolean).join(" ");
+}
+
+function updateDisplays() {
+  const cantus = getNotesFromTextarea("cantus");
+  const counterpoint = getNotesFromTextarea("counterpoint");
+
+  const cantusDisplay = document.getElementById("cantusDisplay");
+  const counterpointDisplay = document.getElementById("counterpointDisplay");
+  const scoreStatus = document.getElementById("scoreStatus");
+
+  if (cantusDisplay) cantusDisplay.textContent = cantus.join(" ");
+  if (counterpointDisplay) {
+    counterpointDisplay.textContent = counterpoint.length ? counterpoint.join(" ") : "未入力";
+  }
+  if (scoreStatus) {
+    scoreStatus.textContent = `対旋律：${counterpoint.length}音 / 定旋律：${cantus.length}音`;
+  }
 }
 
 function addResult(results, type, message) {
-  results.push({
-    type,
-    message
-  });
+  results.push({ type, message });
 }
 
 function renderResults(results) {
   const resultBox = document.getElementById("result");
+
+  if (!resultBox) return;
 
   if (!results.length) {
     resultBox.innerHTML = "";
@@ -154,14 +172,8 @@ function renderResults(results) {
   resultBox.innerHTML = results
     .map((item) => {
       let label = "OK";
-
-      if (item.type === "warn") {
-        label = "注意";
-      }
-
-      if (item.type === "error") {
-        label = "禁止";
-      }
+      if (item.type === "warn") label = "注意";
+      if (item.type === "error") label = "禁止";
 
       return `
         <div class="result-item ${item.type}">
@@ -175,15 +187,14 @@ function renderResults(results) {
 
 function renderSummary(errorCount, warnCount, okCount) {
   const summary = document.getElementById("summary");
+  if (!summary) return;
 
   if (errorCount === 0 && warnCount === 0) {
     summary.innerHTML = `大きな問題は見つかりませんでした。OK項目：${okCount}件`;
     return;
   }
 
-  summary.innerHTML = `
-    禁止：${errorCount}件 / 注意：${warnCount}件 / OK：${okCount}件
-  `;
+  summary.innerHTML = `禁止：${errorCount}件 / 注意：${warnCount}件 / OK：${okCount}件`;
 }
 
 function analyzeCounterpoint() {
@@ -216,7 +227,6 @@ function analyzeCounterpoint() {
   }
 
   const length = Math.min(cantus.length, counterpoint.length);
-
   const cantusMidi = [];
   const counterMidi = [];
 
@@ -255,15 +265,6 @@ function analyzeCounterpoint() {
       );
       errorCount++;
     }
-
-    if (cpMidi < cMidi) {
-      addResult(
-        results,
-        "warn",
-        `${i + 1}音目：対旋律が定旋律より下にあります。上声対位として練習している場合は、声部交差に注意してください。`
-      );
-      warnCount++;
-    }
   }
 
   if (length > 0 && cantusMidi[0] !== null && counterMidi[0] !== null) {
@@ -277,7 +278,7 @@ function analyzeCounterpoint() {
       addResult(
         results,
         "ok",
-        `開始音程は ${getIntervalName(firstInterval)} です。開始音程として使用可能です。`
+        `開始音程は ${getIntervalName(firstInterval)} です。`
       );
       okCount++;
     } else {
@@ -320,9 +321,7 @@ function analyzeCounterpoint() {
     const cp1 = counterMidi[i];
     const cp2 = counterMidi[i + 1];
 
-    if ([c1, c2, cp1, cp2].some((value) => value === null)) {
-      continue;
-    }
+    if ([c1, c2, cp1, cp2].some((value) => value === null)) continue;
 
     const interval1 = cp1 - c1;
     const interval2 = cp2 - c2;
@@ -339,11 +338,7 @@ function analyzeCounterpoint() {
       isPerfectFifth(interval1) &&
       isPerfectFifth(interval2)
     ) {
-      addResult(
-        results,
-        "error",
-        `${i + 1}音目 → ${i + 2}音目：連続5度があります。`
-      );
+      addResult(results, "error", `${i + 1}音目 → ${i + 2}音目：連続5度があります。`);
       errorCount++;
     }
 
@@ -353,11 +348,7 @@ function analyzeCounterpoint() {
       isPerfectOctaveOrUnison(interval1) &&
       isPerfectOctaveOrUnison(interval2)
     ) {
-      addResult(
-        results,
-        "error",
-        `${i + 1}音目 → ${i + 2}音目：連続8度または連続1度があります。`
-      );
+      addResult(results, "error", `${i + 1}音目 → ${i + 2}音目：連続8度または連続1度があります。`);
       errorCount++;
     }
   }
@@ -366,25 +357,6 @@ function analyzeCounterpoint() {
   renderResults(results);
   renderScore();
 }
-
-/* =========================
-   SVG SCORE EDITOR
-========================= */
-
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-const SCORE = {
-  width: 960,
-  height: 260,
-  left: 90,
-  right: 40,
-  top: 55,
-  staffGap: 10,
-  bottomLineY: 125,
-  noteStep: 5,
-  minNote: "C4",
-  maxNote: "C6"
-};
 
 function createSvgElement(tag, attrs = {}) {
   const el = document.createElementNS(SVG_NS, tag);
@@ -406,9 +378,7 @@ function noteToY(note) {
   const noteStep = getDiatonicStep(note);
   const e4Step = getDiatonicStep("E4");
 
-  if (noteStep === null || e4Step === null) {
-    return null;
-  }
+  if (noteStep === null || e4Step === null) return null;
 
   return SCORE.bottomLineY - (noteStep - e4Step) * SCORE.noteStep;
 }
@@ -439,11 +409,14 @@ function getScorePositions(noteCount) {
   const count = Math.max(noteCount, 1);
   const spacing = usableWidth / count;
 
-  return Array.from({ length: count }, (_, i) => SCORE.left + spacing * i + spacing / 2);
+  return Array.from(
+    { length: count },
+    (_, i) => SCORE.left + spacing * i + spacing / 2
+  );
 }
 
 function drawStaff(svg, noteCount) {
-  const startX = SCORE.left - 24;
+  const startX = SCORE.left - 30;
   const endX = SCORE.width - SCORE.right + 10;
 
   for (let i = 0; i < 5; i++) {
@@ -462,7 +435,7 @@ function drawStaff(svg, noteCount) {
   svg.appendChild(
     createSvgElement("text", {
       x: 22,
-      y: SCORE.bottomLineY - 22,
+      y: SCORE.bottomLineY - 25,
       class: "voice-label"
     })
   ).textContent = "Counterpoint";
@@ -470,7 +443,7 @@ function drawStaff(svg, noteCount) {
   svg.appendChild(
     createSvgElement("text", {
       x: 22,
-      y: SCORE.bottomLineY + 48,
+      y: SCORE.bottomLineY + 58,
       class: "voice-label"
     })
   ).textContent = "Cantus";
@@ -481,7 +454,7 @@ function drawStaff(svg, noteCount) {
     svg.appendChild(
       createSvgElement("circle", {
         cx: x,
-        cy: SCORE.bottomLineY + 54,
+        cy: SCORE.bottomLineY + 65,
         r: 2.8,
         class: "slot-marker"
       })
@@ -490,7 +463,7 @@ function drawStaff(svg, noteCount) {
     svg.appendChild(
       createSvgElement("text", {
         x: x - 4,
-        y: SCORE.bottomLineY + 78,
+        y: SCORE.bottomLineY + 92,
         class: "note-label"
       })
     ).textContent = i + 1;
@@ -500,9 +473,9 @@ function drawStaff(svg, noteCount) {
       svg.appendChild(
         createSvgElement("line", {
           x1: midX,
-          y1: SCORE.bottomLineY - 42,
+          y1: SCORE.bottomLineY - 52,
           x2: midX,
-          y2: SCORE.bottomLineY + 66,
+          y2: SCORE.bottomLineY + 78,
           class: "measure-line"
         })
       );
@@ -547,9 +520,7 @@ function drawNote(svg, note, x, voice) {
   const y = noteToY(note);
   const parsed = parseNote(note);
 
-  if (y === null || !parsed) {
-    return;
-  }
+  if (y === null || !parsed) return;
 
   const isCantus = voice === "cantus";
   const xOffset = isCantus ? -7 : 7;
@@ -567,16 +538,16 @@ function drawNote(svg, note, x, voice) {
     ).textContent = parsed.accidental === "#" ? "♯" : "♭";
   }
 
-  const head = createSvgElement("ellipse", {
-    cx: noteX,
-    cy: y,
-    rx: 8.5,
-    ry: 5.8,
-    transform: `rotate(-18 ${noteX} ${y})`,
-    class: isCantus ? "note-head cantus" : "note-head"
-  });
-
-  svg.appendChild(head);
+  svg.appendChild(
+    createSvgElement("ellipse", {
+      cx: noteX,
+      cy: y,
+      rx: 8.5,
+      ry: 5.8,
+      transform: `rotate(-18 ${noteX} ${y})`,
+      class: isCantus ? "note-head cantus" : "note-head"
+    })
+  );
 
   if (isCantus) {
     svg.appendChild(
@@ -603,7 +574,7 @@ function drawNote(svg, note, x, voice) {
   svg.appendChild(
     createSvgElement("text", {
       x: noteX - 12,
-      y: isCantus ? SCORE.bottomLineY + 42 : SCORE.bottomLineY - 62,
+      y: isCantus ? SCORE.bottomLineY + 52 : SCORE.bottomLineY - 72,
       class: "note-label"
     })
   ).textContent = note;
@@ -611,10 +582,7 @@ function drawNote(svg, note, x, voice) {
 
 function renderScore() {
   const svg = document.getElementById("scoreEditor");
-
-  if (!svg) {
-    return;
-  }
+  if (!svg) return;
 
   clearSvg(svg);
 
@@ -632,10 +600,14 @@ function renderScore() {
   counterpoint.forEach((note, i) => {
     drawNote(svg, note, positions[i], "counterpoint");
   });
+
+  updateDisplays();
 }
 
 function handleScoreClick(event) {
   const svg = document.getElementById("scoreEditor");
+  if (!svg) return;
+
   const rect = svg.getBoundingClientRect();
 
   const viewX = ((event.clientX - rect.left) / rect.width) * SCORE.width;
@@ -679,7 +651,13 @@ function undoCounterpointNote() {
 }
 
 function clearCounterpoint() {
-  document.getElementById("counterpoint").value = "";
+  setNotesToTextarea("counterpoint", []);
+  renderScore();
+}
+
+function setExample() {
+  setNotesToTextarea("cantus", ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"]);
+  setNotesToTextarea("counterpoint", ["G4", "F4", "G4", "A4", "B4", "A4", "G4", "F4", "C5"]);
   renderScore();
 }
 
@@ -688,17 +666,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (svg) {
     svg.addEventListener("click", handleScoreClick);
-  }
-
-  const cantus = document.getElementById("cantus");
-  const counterpoint = document.getElementById("counterpoint");
-
-  if (cantus) {
-    cantus.addEventListener("input", renderScore);
-  }
-
-  if (counterpoint) {
-    counterpoint.addEventListener("input", renderScore);
   }
 
   renderScore();

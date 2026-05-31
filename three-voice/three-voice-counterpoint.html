@@ -145,7 +145,7 @@
           <div>
             <h2 data-i18n="scoreInputTitle">五線入力</h2>
             <p data-i18n="scoreInputHelp">
-              声部を選び、五線譜をクリックして音を置きます。選択声部の音は青色になります。
+              第1対旋律・第2対旋律・定旋律を、それぞれ別の楽譜に表示します。第1対旋律と第2対旋律の楽譜をクリックして入力できます。
             </p>
           </div>
           <div class="score-status" id="scoreStatus">
@@ -153,14 +153,55 @@
           </div>
         </div>
 
-        <svg
-          id="scoreEditor"
-          class="score-editor"
-          viewBox="0 0 960 520"
-          role="img"
-          aria-label="3声対位法入力用の3段五線譜"
-          tabindex="0"
-        ></svg>
+        <div class="voice-score-stack">
+          <section class="voice-score-card editable-voice" data-voice="counterpoint1">
+            <div class="voice-score-header">
+              <h3 data-i18n="counterpoint1Label">第1対旋律：</h3>
+              <span data-i18n="voiceUpper">第1対旋律・上声</span>
+            </div>
+            <svg
+              id="scoreEditorCounterpoint1"
+              class="score-editor voice-score-editor"
+              viewBox="0 0 960 170"
+              role="img"
+              aria-label="第1対旋律の楽譜"
+              tabindex="0"
+              data-voice="counterpoint1"
+            ></svg>
+          </section>
+
+          <section class="voice-score-card editable-voice" data-voice="counterpoint2">
+            <div class="voice-score-header">
+              <h3 data-i18n="counterpoint2Label">第2対旋律：</h3>
+              <span data-i18n="voiceMiddle">第2対旋律・中声</span>
+            </div>
+            <svg
+              id="scoreEditorCounterpoint2"
+              class="score-editor voice-score-editor"
+              viewBox="0 0 960 170"
+              role="img"
+              aria-label="第2対旋律の楽譜"
+              tabindex="0"
+              data-voice="counterpoint2"
+            ></svg>
+          </section>
+
+          <section class="voice-score-card locked-voice" data-voice="cantus">
+            <div class="voice-score-header">
+              <h3 data-i18n="cantusLabel">定旋律：</h3>
+              <span>Cantus firmus</span>
+            </div>
+            <svg
+              id="scoreEditorCantus"
+              class="score-editor voice-score-editor locked"
+              viewBox="0 0 960 170"
+              role="img"
+              aria-label="定旋律の楽譜"
+              tabindex="0"
+              data-voice="cantus"
+            ></svg>
+          </section>
+        </div>
       </div>
 
       <div class="current-notes">

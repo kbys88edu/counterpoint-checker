@@ -1,1851 +1,1069 @@
-const NATURAL_NOTES = [
-  "C3", "D3", "E3", "F3", "G3", "A3", "B3",
-  "C4", "D4", "E4", "F4", "G4", "A4", "B4",
-  "C5", "D5", "E5", "F5", "G5", "A5", "B5",
-  "C6", "D6", "E6", "F6", "G6", "A6", "B6"
-];
+(() => {
+  "use strict";
 
-const NOTE_LETTER_STEPS = {
-  C: 0,
-  D: 1,
-  E: 2,
-  F: 3,
-  G: 4,
-  A: 5,
-  B: 6
-};
+  const SVG_NS = "http://www.w3.org/2000/svg";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
-const SCORE = {
-  width: 960,
-  height: 330,
-  left: 95,
-  right: 45,
-  staffGap: 10,
-  bottomLineY: 120,
-  cantusBottomLineY: 245,
-  noteStep: 5,
-  playheadTop: 55,
-  playheadBottom: 305
-};
-
-const I18N = {
-  ja: {
-    backLink: "← トップへ戻る",
-    languageLabel: "言語",
-    title: "第一種2声対位法チェッカー",
-    lead: "五線譜をクリックして対旋律を入力します。↑で半音上行、↓で半音下行、← / → で前後の音へ移動します。スペースキーで定旋律と対旋律を同時に再生・停止できます。",
-    exerciseLabel: "課題",
-    levelFilterLabel: "レベル",
-    levelAll: "すべて",
-    levelBeginner: "初級",
-    levelIntermediate: "中級",
-    levelAdvanced: "上級",
-    loadExercise: "課題を読み込む",
-    loadExample: "例題を読み込む",
-    deleteLast: "最後の音を削除",
-    clearCounterpoint: "対旋律をクリア",
-    refreshScore: "楽譜を更新",
-    playSelected: "選択音を鳴らす",
-    exportMidi: "MIDIを書き出す",
-    resetStart: "最初に戻す",
-    playbackModeLabel: "再生対象",
-    playBoth: "両声",
-    playCantus: "定旋律のみ",
-    playCounterpoint: "対旋律のみ",
-    timbreLabel: "音色",
-    timbreSine: "Sine / 柔らかい",
-    timbreTriangle: "Triangle / 素直",
-    timbreSquare: "Square / 電子的",
-    timbreSaw: "Sawtooth / 明るい",
-    timbreOrgan: "Organ / オルガン風",
-    timbreBell: "Bell / ベル風",
-    timbreHumanVoice: "人の声",
-    playbackHint: "Space：再生 / 停止　｜　← / →：前後の音へ移動",
-    scoreInputTitle: "五線入力",
-    scoreInputHelp: "五線をクリックして音を置きます。置いた音は青色で選択され、↑↓で半音移動、←→で前後の音へ移動できます。",
-    currentInput: "現在の入力",
-    cantusLabel: "定旋律：",
-    counterpointLabel: "対旋律：",
-    analyze: "解析する",
-    analysisResult: "解析結果",
-    notAnalyzed: "まだ解析していません。",
-    play: "再生",
-    stop: "停止",
-    noInput: "未入力",
-    status: (cp, cf, pos, len) => `対旋律：${cp}音 / 定旋律：${cf}音 / 再生位置：${pos}/${len}`,
-    summaryOk: (ok) => `大きな問題は見つかりませんでした。OK項目：${ok}件`,
-    summaryCounts: (e, w, ok) => `禁止：${e}件 / 注意：${w}件 / OK：${ok}件`,
-    labelOk: "OK",
-    labelWarn: "注意",
-    labelError: "禁止",
-    needInput: "定旋律と対旋律を入力してください。",
-    lengthMismatch: (cf, cp) => `音数が一致していません。定旋律は${cf}音、対旋律は${cp}音です。`,
-    lengthOk: (n) => `音数は一致しています。全${n}音です。`,
-    invalidNote: (i) => `${i}音目：音名の形式が正しくありません。例：C4, F#4, Bb3`,
-    intervalOk: (i, c, cp, name) => `${i}音目：${c} - ${cp} は ${name} です。`,
-    intervalBad: (i, c, cp, name) => `${i}音目：${c} - ${cp} は ${name} です。第一種対位法では不協和音程です。`,
-    startOk: (name) => `開始音程は ${name} です。`,
-    startBad: (name) => `開始音程は ${name} です。第一種では完全1度・完全5度・完全8度で始めるのが基本です。`,
-    endOk: (name) => `終止音程は ${name} です。`,
-    endBad: (name) => `終止音程は ${name} です。第一種では完全1度または完全8度で終止するのが基本です。`,
-    parallelFifth: (i) => `${i}音目 → ${i + 1}音目：連続5度があります。`,
-    parallelOctave: (i) => `${i}音目 → ${i + 1}音目：連続8度または連続1度があります。`,
-    intervals: {
-      perfectUnison: "完全1度",
-      perfectOctave: "完全8度",
-      compoundPerfect: "完全8度または複合完全音程",
-      m2: "短2度",
-      M2: "長2度",
-      m3: "短3度",
-      M3: "長3度",
-      P4: "完全4度",
-      tritone: "増4度 / 減5度",
-      P5: "完全5度",
-      m6: "短6度",
-      M6: "長6度",
-      m7: "短7度",
-      M7: "長7度",
-      unknown: "不明な音程"
-    }
-  },
-  fr: {
-    backLink: "← Retour à l’accueil",
-    languageLabel: "Langue",
-    title: "Correcteur de contrepoint à deux voix — première espèce",
-    lead: "Cliquez sur la portée pour saisir le contrepoint. ↑ monte d’un demi-ton, ↓ descend d’un demi-ton, ← / → déplace la sélection. La barre d’espace lance ou arrête la lecture.",
-    exerciseLabel: "Exercice",
-    levelFilterLabel: "Niveau",
-    levelAll: "Tous",
-    levelBeginner: "Débutant",
-    levelIntermediate: "Intermédiaire",
-    levelAdvanced: "Avancé",
-    loadExercise: "Charger l’exercice",
-    loadExample: "Charger l’exemple",
-    deleteLast: "Supprimer la dernière note",
-    clearCounterpoint: "Effacer le contrepoint",
-    refreshScore: "Actualiser la partition",
-    playSelected: "Jouer la note sélectionnée",
-    exportMidi: "Exporter MIDI",
-    resetStart: "Revenir au début",
-    playbackModeLabel: "Lecture",
-    playBoth: "Deux voix",
-    playCantus: "Cantus seul",
-    playCounterpoint: "Contrepoint seul",
-    timbreLabel: "Timbre",
-    timbreSine: "Sine / doux",
-    timbreTriangle: "Triangle / simple",
-    timbreSquare: "Square / électronique",
-    timbreSaw: "Sawtooth / brillant",
-    timbreOrgan: "Organ / orgue",
-    timbreBell: "Bell / cloche",
-    timbreHumanVoice: "Voix humaine",
-    playbackHint: "Espace : lecture / arrêt　｜　← / → : note précédente / suivante",
-    scoreInputTitle: "Saisie sur portée",
-    scoreInputHelp: "Cliquez sur la portée pour placer une note. La note sélectionnée apparaît en bleu. ↑↓ déplacent par demi-ton, ←→ changent de note.",
-    currentInput: "Saisie actuelle",
-    cantusLabel: "Cantus :",
-    counterpointLabel: "Contrepoint :",
-    analyze: "Analyser",
-    analysisResult: "Résultat de l’analyse",
-    notAnalyzed: "Pas encore analysé.",
-    play: "Lecture",
-    stop: "Arrêter",
-    noInput: "Non saisi",
-    status: (cp, cf, pos, len) => `Contrepoint : ${cp} notes / Cantus : ${cf} notes / Position : ${pos}/${len}`,
-    summaryOk: (ok) => `Aucun problème majeur détecté. Éléments OK : ${ok}`,
-    summaryCounts: (e, w, ok) => `Interdits : ${e} / Attention : ${w} / OK : ${ok}`,
-    labelOk: "OK",
-    labelWarn: "Attention",
-    labelError: "Interdit",
-    needInput: "Veuillez saisir le cantus et le contrepoint.",
-    lengthMismatch: (cf, cp) => `Le nombre de notes ne correspond pas. Cantus : ${cf}, contrepoint : ${cp}.`,
-    lengthOk: (n) => `Le nombre de notes correspond. Total : ${n}.`,
-    invalidNote: (i) => `Note ${i} : format de note invalide. Exemple : C4, F#4, Bb3`,
-    intervalOk: (i, c, cp, name) => `Note ${i} : ${c} - ${cp} forme ${name}.`,
-    intervalBad: (i, c, cp, name) => `Note ${i} : ${c} - ${cp} forme ${name}. En première espèce, cet intervalle est dissonant.`,
-    startOk: (name) => `L’intervalle initial est ${name}.`,
-    startBad: (name) => `L’intervalle initial est ${name}. En première espèce, on commence normalement par l’unisson, la quinte ou l’octave.`,
-    endOk: (name) => `L’intervalle final est ${name}.`,
-    endBad: (name) => `L’intervalle final est ${name}. En première espèce, on termine normalement par l’unisson ou l’octave.`,
-    parallelFifth: (i) => `Note ${i} → ${i + 1} : quintes parallèles.`,
-    parallelOctave: (i) => `Note ${i} → ${i + 1} : octaves ou unissons parallèles.`,
-    intervals: {
-      perfectUnison: "unisson juste",
-      perfectOctave: "octave juste",
-      compoundPerfect: "octave juste ou intervalle composé juste",
-      m2: "seconde mineure",
-      M2: "seconde majeure",
-      m3: "tierce mineure",
-      M3: "tierce majeure",
-      P4: "quarte juste",
-      tritone: "quarte augmentée / quinte diminuée",
-      P5: "quinte juste",
-      m6: "sixte mineure",
-      M6: "sixte majeure",
-      m7: "septième mineure",
-      M7: "septième majeure",
-      unknown: "intervalle inconnu"
-    }
-  }
-};
-
-const EXERCISES = [
-  {
-    id: "species1-c-major-01",
-    level: "beginner",
-    title: { ja: "初級 01｜C major｜順次進行", fr: "Débutant 01｜Do majeur｜Mouvement conjoint" },
-    description: {
-      ja: "ほぼ順次進行のみの基本課題。ひとつの山を作ります。",
-      fr: "Exercice fondamental, presque entièrement conjoint, avec une seule arche."
-    },
-    cantus: ["C4", "D4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4", "C4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-c-major-02",
-    level: "beginner",
-    title: { ja: "初級 02｜C major｜短い山型", fr: "Débutant 02｜Do majeur｜Petite arche" },
-    description: {
-      ja: "短めの課題。終止に向けて自然に下行します。",
-      fr: "Exercice court, avec une descente naturelle vers la cadence."
-    },
-    cantus: ["C4", "D4", "E4", "G4", "F4", "E4", "D4", "C4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-g-major-01",
-    level: "beginner",
-    title: { ja: "初級 03｜G major｜F#あり", fr: "Débutant 03｜Sol majeur｜Avec Fa#" },
-    description: {
-      ja: "G majorの基本課題。F#を含みます。",
-      fr: "Exercice de base en Sol majeur, avec Fa#."
-    },
-    cantus: ["G3", "A3", "B3", "C4", "D4", "E4", "D4", "C4", "B3", "A3", "G3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-f-major-01",
-    level: "beginner",
-    title: { ja: "初級 04｜F major｜Bbあり", fr: "Débutant 04｜Fa majeur｜Avec Sib" },
-    description: {
-      ja: "F majorの基本課題。Bbを含みます。",
-      fr: "Exercice de base en Fa majeur, avec Sib."
-    },
-    cantus: ["F3", "G3", "A3", "Bb3", "C4", "D4", "C4", "Bb3", "A3", "G3", "F3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-c-major-03",
-    level: "intermediate",
-    title: { ja: "中級 01｜C major｜3度跳躍", fr: "Intermédiaire 01｜Do majeur｜Sauts de tierce" },
-    description: {
-      ja: "3度跳躍を含む課題。跳躍後の反対方向への回復を確認します。",
-      fr: "Inclut des sauts de tierce, compensés par un mouvement contraire."
-    },
-    cantus: ["C4", "E4", "D4", "F4", "G4", "A4", "G4", "E4", "F4", "D4", "C4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-c-major-04",
-    level: "intermediate",
-    title: { ja: "中級 02｜C major｜低音域", fr: "Intermédiaire 02｜Do majeur｜Registre grave" },
-    description: {
-      ja: "低めの音域から始まる課題。音域のバランスに注意します。",
-      fr: "Commence dans un registre plus grave. Travail sur l’équilibre de tessiture."
-    },
-    cantus: ["C3", "D3", "F3", "E3", "G3", "A3", "G3", "F3", "E3", "D3", "C3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-a-minor-01",
-    level: "intermediate",
-    title: { ja: "中級 03｜A minor｜自然短音階", fr: "Intermédiaire 03｜La mineur｜Mineur naturel" },
-    description: {
-      ja: "自然短音階に近い短調課題です。終止音程に注意してください。",
-      fr: "Exercice en mineur naturel. Attention à l’intervalle final."
-    },
-    cantus: ["A3", "B3", "C4", "D4", "E4", "F4", "E4", "D4", "C4", "B3", "A3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-d-minor-01",
-    level: "intermediate",
-    title: { ja: "中級 04｜D minor｜Bbあり", fr: "Intermédiaire 04｜Ré mineur｜Avec Sib" },
-    description: {
-      ja: "D minorの課題。Bbを含み、旋法的な短調の練習になります。",
-      fr: "Exercice en Ré mineur, avec Sib, proche d’un traitement modal."
-    },
-    cantus: ["D4", "E4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "E4", "D4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-c-major-05",
-    level: "advanced",
-    title: { ja: "上級 01｜C major｜長めの旋律", fr: "Avancé 01｜Do majeur｜Mélodie plus longue" },
-    description: {
-      ja: "少し長めの課題。全体の方向性と頂点の扱いを意識します。",
-      fr: "Exercice plus long. Travail sur la direction globale et le sommet mélodique."
-    },
-    cantus: ["C4", "D4", "E4", "G4", "F4", "A4", "G4", "E4", "F4", "D4", "E4", "D4", "C4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-g-major-02",
-    level: "advanced",
-    title: { ja: "上級 02｜G major｜跳躍と回復", fr: "Avancé 02｜Sol majeur｜Sauts et compensations" },
-    description: {
-      ja: "跳躍と順次進行のバランスを取る課題です。",
-      fr: "Exercice sur l’équilibre entre sauts et mouvements conjoints."
-    },
-    cantus: ["G3", "B3", "A3", "C4", "D4", "E4", "D4", "B3", "C4", "A3", "B3", "A3", "G3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-f-major-02",
-    level: "advanced",
-    title: { ja: "上級 03｜F major｜広めの音域", fr: "Avancé 03｜Fa majeur｜Tessiture élargie" },
-    description: {
-      ja: "やや広い音域を使う課題。対旋律の音域管理が難しくなります。",
-      fr: "Tessiture un peu plus large. Le contrôle de la seconde voix devient plus difficile."
-    },
-    cantus: ["F3", "A3", "G3", "Bb3", "C4", "D4", "F4", "E4", "D4", "C4", "Bb3", "G3", "F3"],
-    counterpoint: []
-  },
-  {
-    id: "species1-d-minor-02",
-    level: "advanced",
-    title: { ja: "上級 04｜D minor｜短調・長め", fr: "Avancé 04｜Ré mineur｜Mineur plus long" },
-    description: {
-      ja: "短調で長めの課題。終止と不協和音程の回避を丁寧に確認します。",
-      fr: "Exercice plus long en mineur. Vérifiez soigneusement la cadence et les dissonances."
-    },
-    cantus: ["D4", "F4", "E4", "G4", "A4", "Bb4", "A4", "F4", "G4", "E4", "F4", "E4", "D4"],
-    counterpoint: []
-  },
-  {
-    id: "species1-example-filled",
-    level: "beginner",
-    title: { ja: "入力例つき", fr: "Exemple rempli" },
-    description: {
-      ja: "動作確認用。対旋律があらかじめ入っています。",
-      fr: "Exemple de démonstration avec un contrepoint déjà saisi."
-    },
-    cantus: ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"],
-    counterpoint: ["G4", "F4", "G4", "A4", "Bb4", "A4", "G4", "F4", "C5"]
-  }
-];
-
-let currentLanguage = "ja";
-let selectedIndex = 0;
-let playbackIndex = 0;
-let isPlaying = false;
-let playbackTimerId = null;
-let audioContext = null;
-let analysisIssues = [];
-
-function t(key) {
-  return I18N[currentLanguage][key];
-}
-
-function getLevelName(level) {
-  const map = {
-    beginner: t("levelBeginner"),
-    intermediate: t("levelIntermediate"),
-    advanced: t("levelAdvanced")
+  const SCORE = {
+    width: 1480,
+    height: 430,
+    left: 128,
+    right: 64,
+    measureWidth: 118,
+    staffGap: 14,
+    noteStep: 7,
+    counterpointBottomLineY: 150,
+    cantusBottomLineY: 320,
+    playheadTop: 56,
+    playheadBottom: 400,
+    noteImageWidth: 31.3,
+    noteImageHeight: 18.4,
+    accidentalWidth: 19,
+    accidentalHeight: 52
   };
 
-  return map[level] || level;
-}
-
-function setLanguage(lang) {
-  if (!I18N[lang]) return;
-
-  currentLanguage = lang;
-  document.documentElement.lang = lang;
-
-  document.querySelectorAll("[data-i18n]").forEach((element) => {
-    const key = element.getAttribute("data-i18n");
-    const value = t(key);
-
-    if (typeof value === "string") {
-      element.textContent = value;
-    }
-  });
-
-  populateExerciseSelect(true);
-  updateExerciseDescription();
-  updateDisplays();
-  updatePlayPauseButton();
-
-  const summary = document.getElementById("summary");
-  if (summary && summary.getAttribute("data-i18n") === "notAnalyzed") {
-    summary.textContent = t("notAnalyzed");
-  }
-}
-
-function getAudioContext() {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-
-  if (audioContext.state === "suspended") {
-    audioContext.resume();
-  }
-
-  return audioContext;
-}
-
-function getTimbre() {
-  const select = document.getElementById("timbreSelect");
-  return select ? select.value : "triangle";
-}
-
-function getTimbreConfig(timbre = getTimbre()) {
-  const configs = {
-    sine: { waveform: "sine", gain: 0.17, attack: 0.015, release: 0.06, secondOscillator: false },
-    triangle: { waveform: "triangle", gain: 0.18, attack: 0.012, release: 0.07, secondOscillator: false },
-    square: { waveform: "square", gain: 0.10, attack: 0.01, release: 0.05, secondOscillator: false },
-    sawtooth: { waveform: "sawtooth", gain: 0.09, attack: 0.01, release: 0.06, secondOscillator: false },
-    organ: { waveform: "sine", gain: 0.13, attack: 0.02, release: 0.12, secondOscillator: true, secondRatio: 2, secondGain: 0.035, secondWaveform: "sine" },
-    bell: { waveform: "sine", gain: 0.15, attack: 0.005, release: 0.22, secondOscillator: true, secondRatio: 2.01, secondGain: 0.055, secondWaveform: "sine" }
+  const NOTATION_IMAGE_BASE = "images/notation/";
+  const NOTATION_IMAGES = {
+    staff: `${NOTATION_IMAGE_BASE}staff-5lines.png`,
+    trebleClef: `${NOTATION_IMAGE_BASE}treble-clef.png`,
+    bassClef: `${NOTATION_IMAGE_BASE}bass-clef.png`,
+    wholeNote: `${NOTATION_IMAGE_BASE}whole-note.png`,
+    sharp: `${NOTATION_IMAGE_BASE}sharp.png`,
+    flat: `${NOTATION_IMAGE_BASE}flat.png`,
+    natural: `${NOTATION_IMAGE_BASE}natural.png`
   };
 
-  return configs[timbre] || configs.triangle;
-}
-
-function midiToFrequency(midi) {
-  return 440 * Math.pow(2, (midi - 69) / 12);
-}
-
-function createVoiceFormant(ctx, source, destination, now, duration, gainScale) {
-  const inputGain = ctx.createGain();
-  inputGain.gain.setValueAtTime(0.0001, now);
-  inputGain.gain.exponentialRampToValueAtTime(0.16 * gainScale, now + 0.055);
-  inputGain.gain.setValueAtTime(0.13 * gainScale, now + Math.max(0.06, duration * 0.72));
-  inputGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.16);
-
-  const formants = [
-    { frequency: 750, q: 7.5, gain: 0.9 },
-    { frequency: 1150, q: 9.0, gain: 0.55 },
-    { frequency: 2450, q: 11.0, gain: 0.35 }
+  const EXERCISES = [
+    { id: "c-major-arch", title: "C major / アーチ型", desc: "Cから上行し、中央で頂点を作って戻る基本課題です。", cantus: ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"] },
+    { id: "d-minor-step", title: "D minor / 順次進行", desc: "短調の感覚を保ちながら順次進行を練習します。", cantus: ["D4", "E4", "F4", "G4", "A4", "G4", "F4", "E4", "D4"] },
+    { id: "g-major-low", title: "G major / 低めの音域", desc: "やや低い音域で、安定した協和音程を作る課題です。", cantus: ["G3", "A3", "B3", "C4", "D4", "C4", "B3", "A3", "G3"] },
+    { id: "f-major-small-peak", title: "F major / 小さな頂点", desc: "短い上行と下行を含む、まとまりやすい定旋律です。", cantus: ["F3", "G3", "A3", "C4", "B3", "A3", "G3", "F3"] },
+    { id: "a-minor-return", title: "A minor / 回帰", desc: "開始音へ自然に戻ることを意識する課題です。", cantus: ["A3", "B3", "C4", "D4", "E4", "D4", "C4", "B3", "A3"] },
+    { id: "c-major-leap", title: "C major / 小さな跳躍", desc: "小さな跳躍を含む定旋律に対して対旋律を作ります。", cantus: ["C4", "E4", "D4", "F4", "G4", "E4", "F4", "D4", "C4"] },
+    { id: "e-minor-middle", title: "E minor / 中音域", desc: "中音域で対旋律の輪郭を整える課題です。", cantus: ["E4", "F4", "G4", "A4", "B4", "A4", "G4", "F4", "E4"] },
+    { id: "g-major-long", title: "G major / 長め", desc: "少し長い定旋律で、連続5度・8度を避ける練習です。", cantus: ["G3", "A3", "B3", "D4", "C4", "B3", "A3", "C4", "B3", "A3", "G3"] },
+    { id: "f-major-descend", title: "F major / 下降中心", desc: "下降形を中心にした定旋律です。", cantus: ["F4", "E4", "D4", "C4", "B3", "C4", "D4", "C4", "F3"] },
+    { id: "c-major-extended", title: "C major / 拡張", desc: "やや長めの総合練習です。", cantus: ["C4", "D4", "E4", "G4", "F4", "E4", "D4", "F4", "E4", "D4", "C4"] }
   ];
 
-  source.connect(inputGain);
+  let selectedIndex = 0;
+  let playbackIndex = 0;
+  let isPlaying = false;
+  let playbackTimerId = null;
+  let audioContext = null;
+  let reverbNodes = null;
+  let lastIssues = [];
 
-  formants.forEach((formant) => {
-    const filter = ctx.createBiquadFilter();
-    const gain = ctx.createGain();
+  const voiceMuteState = {
+    counterpoint: false,
+    cantus: false
+  };
 
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(formant.frequency, now);
-    filter.Q.setValueAtTime(formant.q, now);
+  const sampleVoiceCache = {};
 
-    gain.gain.setValueAtTime(formant.gain, now);
-
-    inputGain.connect(filter);
-    filter.connect(gain);
-    gain.connect(destination);
-  });
-}
-
-function playVoiceLikeNote(midi, duration = 0.45, gainScale = 1) {
-  const ctx = getAudioContext();
-  const now = ctx.currentTime;
-  const frequency = midiToFrequency(midi);
-
-  const output = ctx.createGain();
-  output.gain.setValueAtTime(0.85, now);
-  output.connect(ctx.destination);
-
-  const vibrato = ctx.createOscillator();
-  const vibratoGain = ctx.createGain();
-  vibrato.type = "sine";
-  vibrato.frequency.setValueAtTime(5.4, now);
-  vibratoGain.gain.setValueAtTime(Math.max(1.0, frequency * 0.006), now);
-  vibrato.connect(vibratoGain);
-
-  const osc1 = ctx.createOscillator();
-  osc1.type = "sawtooth";
-  osc1.frequency.setValueAtTime(frequency, now);
-  vibratoGain.connect(osc1.frequency);
-
-  const osc2 = ctx.createOscillator();
-  osc2.type = "triangle";
-  osc2.frequency.setValueAtTime(frequency * 0.997, now);
-  vibratoGain.connect(osc2.frequency);
-
-  const osc3 = ctx.createOscillator();
-  osc3.type = "sine";
-  osc3.frequency.setValueAtTime(frequency * 2.005, now);
-  vibratoGain.connect(osc3.frequency);
-
-  createVoiceFormant(ctx, osc1, output, now, duration, gainScale * 0.85);
-  createVoiceFormant(ctx, osc2, output, now, duration, gainScale * 0.45);
-  createVoiceFormant(ctx, osc3, output, now, duration, gainScale * 0.18);
-
-  const noiseBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * (duration + 0.18)), ctx.sampleRate);
-  const data = noiseBuffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) {
-    data[i] = (Math.random() * 2 - 1) * 0.018;
+  function getSampleVoiceBasePath() {
+    return "audio/voice";
   }
 
-  const noise = ctx.createBufferSource();
-  noise.buffer = noiseBuffer;
+  function getVoiceSampleCandidates(voiceSet, midi) {
+    const folder = voiceSet === "maleSample" ? "male" : "female";
 
-  const noiseFilter = ctx.createBiquadFilter();
-  noiseFilter.type = "bandpass";
-  noiseFilter.frequency.setValueAtTime(3200, now);
-  noiseFilter.Q.setValueAtTime(0.9, now);
+    const anchors = [
+      { midi: 55, name: "G3" },
+      { midi: 60, name: "C4" },
+      { midi: 67, name: "G4" },
+      { midi: 72, name: "C5" },
+      { midi: 79, name: "G5" }
+    ];
 
-  const noiseGain = ctx.createGain();
-  noiseGain.gain.setValueAtTime(0.0001, now);
-  noiseGain.gain.exponentialRampToValueAtTime(0.018 * gainScale, now + 0.035);
-  noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.08);
+    let best = anchors[0];
+    anchors.forEach((anchor) => {
+      if (Math.abs(anchor.midi - midi) < Math.abs(best.midi - midi)) {
+        best = anchor;
+      }
+    });
 
-  noise.connect(noiseFilter);
-  noiseFilter.connect(noiseGain);
-  noiseGain.connect(output);
+    const base = getSampleVoiceBasePath();
 
-  vibrato.start(now);
-  osc1.start(now);
-  osc2.start(now);
-  osc3.start(now);
-  noise.start(now);
+    return [
+      { url: `${base}/${folder}/${best.name}.wav`, rootMidi: best.midi },
+      { url: `${base}/${folder}/${best.name}.mp3`, rootMidi: best.midi },
+      { url: `${base}/${folder}/${best.name}.ogg`, rootMidi: best.midi },
 
-  const stopAt = now + duration + 0.25;
-  vibrato.stop(stopAt);
-  osc1.stop(stopAt);
-  osc2.stop(stopAt);
-  osc3.stop(stopAt);
-  noise.stop(stopAt);
-}
-
-
-
-const SAMPLE_VOICE_SETS = {
-  femaleSample: {
-    folder: "female",
-    // Required female files:
-    // C3.wav, G3.wav, C4.wav, G4.wav
-    // C2.wav and G2.wav are intentionally not used.
-    notes: ["C3", "G3", "C4", "G4"],
-    transposeSemitones: -12
-  },
-  maleSample: {
-    folder: "male",
-    // Required male files:
-    // C2.wav, G2.wav, C3.wav, G3.wav
-    notes: ["C2", "G2", "C3", "G3"],
-    transposeSemitones: 0
+      // alternate naming, if the uploaded files use flat folders
+      { url: `${base}/${folder}_${best.name}.wav`, rootMidi: best.midi },
+      { url: `${base}/${folder}_${best.name}.mp3`, rootMidi: best.midi },
+      { url: `${base}/${folder}_${best.name}.ogg`, rootMidi: best.midi }
+    ];
   }
-};
 
-const sampleVoiceCache = {};
+  async function loadVoiceSample(candidate) {
+    const ctx = ensureAudioReady();
+    const cacheKey = candidate.url;
 
-function getSampleVoiceBasePath() {
-  const path = window.location.pathname;
-  if (
-    path.includes("/module2/") ||
-    path.includes("/module3/") ||
-    path.includes("/module4/") ||
-    path.includes("/three-voice/")
-  ) {
-    return "../audio/voice";
-  }
-  return "audio/voice";
-}
-
-function getNearestSampleNote(targetMidi, sampleNotes) {
-  let nearest = sampleNotes[0];
-  let nearestDistance = Infinity;
-
-  sampleNotes.forEach((note) => {
-    const midi = noteToMidi(note);
-    if (midi === null) return;
-    const distance = Math.abs(midi - targetMidi);
-    if (distance < nearestDistance) {
-      nearest = note;
-      nearestDistance = distance;
+    if (sampleVoiceCache[cacheKey]) {
+      return sampleVoiceCache[cacheKey];
     }
-  });
 
-  return nearest;
-}
+    const response = await fetch(candidate.url, { cache: "force-cache" });
+    if (!response.ok) {
+      throw new Error(`Sample not found: ${candidate.url}`);
+    }
 
-async function loadSampleVoiceBuffer(setName, note) {
-  const set = SAMPLE_VOICE_SETS[setName];
-  if (!set) return null;
-
-  const cacheKey = `${setName}:${note}`;
-  if (sampleVoiceCache[cacheKey]) return sampleVoiceCache[cacheKey];
-
-  const ctx = getAudioContext();
-  const url = `${getSampleVoiceBasePath()}/${set.folder}/${note}.wav`;
-
-  try {
-    const response = await fetch(url, { cache: "force-cache" });
-    if (!response.ok) throw new Error(`Sample not found: ${url}`);
     const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-    sampleVoiceCache[cacheKey] = audioBuffer;
-    return audioBuffer;
-  } catch (error) {
-    console.warn(error);
-    return null;
-  }
-}
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
 
-async function playSampleVoiceNote(setName, midi, duration = 0.45, gainScale = 1) {
-  const set = SAMPLE_VOICE_SETS[setName];
-  if (!set) return;
+    sampleVoiceCache[cacheKey] = {
+      buffer: audioBuffer,
+      rootMidi: candidate.rootMidi
+    };
 
-  const targetMidi = midi;
-  const nearestNote = getNearestSampleNote(targetMidi, set.notes);
-  const sourceMidi = noteToMidi(nearestNote);
-
-  if (sourceMidi === null) return;
-
-  const buffer = await loadSampleVoiceBuffer(setName, nearestNote);
-
-  if (!buffer) {
-    playVoiceLikeNote(midi, duration, gainScale);
-    return;
+    return sampleVoiceCache[cacheKey];
   }
 
-  const ctx = getAudioContext();
-  const now = ctx.currentTime;
+  async function playSampleVoiceNote(voiceSet, midi, duration = 0.75, gainScale = 1) {
+    const ctx = ensureAudioReady();
+    const candidates = getVoiceSampleCandidates(voiceSet, midi);
 
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
+    let sample = null;
 
-  // Female samples are intentionally played one octave lower.
-  // Male samples are played at their normal register.
-  source.playbackRate.setValueAtTime(
-    Math.pow(2, (targetMidi - sourceMidi + set.transposeSemitones) / 12),
-    now
-  );
+    for (const candidate of candidates) {
+      try {
+        sample = await loadVoiceSample(candidate);
+        break;
+      } catch (error) {
+        // Try next candidate.
+      }
+    }
 
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.78 * gainScale, now + 0.025);
-  gain.gain.setValueAtTime(0.70 * gainScale, now + Math.max(0.03, duration * 0.72));
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.08);
-
-  source.connect(gain);
-  gain.connect(ctx.destination);
-
-  source.start(now);
-  source.stop(now + duration + 0.12);
-}
-
-
-
-
-
-function playMidiNote(midi, duration = 0.38, gainScale = 1, voiceSet = "femaleSample") {
-  const timbre = getTimbre();
-
-  if (timbre === "humanVoice") {
-    playSampleVoiceNote(voiceSet, midi, duration, gainScale);
-    return;
-  }
-
-  if (timbre === "voice") {
-    playVoiceLikeNote(midi, duration, gainScale);
-    return;
-  }
-
-  const ctx = getAudioContext();
-  const now = ctx.currentTime;
-  const config = getTimbreConfig(timbre);
-  const frequency = midiToFrequency(midi);
-
-  const mainOsc = ctx.createOscillator();
-  const mainGain = ctx.createGain();
-
-  mainOsc.type = config.waveform;
-  mainOsc.frequency.setValueAtTime(frequency, now);
-
-  mainGain.gain.setValueAtTime(0.0001, now);
-  mainGain.gain.exponentialRampToValueAtTime(config.gain * gainScale, now + config.attack);
-  mainGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + config.release);
-
-  mainOsc.connect(mainGain);
-  mainGain.connect(ctx.destination);
-
-  mainOsc.start(now);
-  mainOsc.stop(now + duration + config.release + 0.05);
-
-  if (config.secondOscillator) {
-    const secondOsc = ctx.createOscillator();
-    const secondGain = ctx.createGain();
-
-    secondOsc.type = config.secondWaveform || "sine";
-    secondOsc.frequency.setValueAtTime(frequency * (config.secondRatio || 2), now);
-
-    secondGain.gain.setValueAtTime(0.0001, now);
-    secondGain.gain.exponentialRampToValueAtTime((config.secondGain || 0.04) * gainScale, now + config.attack);
-    secondGain.gain.exponentialRampToValueAtTime(0.0001, now + duration + config.release);
-
-    secondOsc.connect(secondGain);
-    secondGain.connect(ctx.destination);
-    secondOsc.start(now);
-    secondOsc.stop(now + duration + config.release + 0.05);
-  }
-}
-
-function playNoteName(note, duration = 0.38, gainScale = 1, voiceSet = "femaleSample") {
-  const midi = noteToMidi(note);
-  if (midi === null) return;
-  playMidiNote(midi, duration, gainScale, voiceSet);
-}
-
-function getPlaybackMode() {
-  const select = document.getElementById("playbackModeSelect");
-  return select ? select.value : "both";
-}
-
-function playSelectedNote() {
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const note = counterpoint[selectedIndex];
-
-  if (!note) return;
-
-  playNoteName(note, 0.55, 1, "femaleSample");
-}
-
-function previewTimbre() {
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const cantus = getNotesFromTextarea("cantus");
-  const note = counterpoint[selectedIndex] || cantus[selectedIndex] || "C4";
-  playNoteName(note, 0.5, 1, "femaleSample");
-}
-
-function getTempo() {
-  const input = document.getElementById("tempoInput");
-  const raw = input ? parseInt(input.value, 10) : 72;
-
-  if (Number.isNaN(raw)) return 72;
-
-  return Math.min(180, Math.max(40, raw));
-}
-
-function getStepDurationSeconds() {
-  return 60 / getTempo();
-}
-
-function getPlaybackLength() {
-  const cantus = getNotesFromTextarea("cantus");
-  const counterpoint = getNotesFromTextarea("counterpoint");
-
-  return Math.max(cantus.length, counterpoint.length, 0);
-}
-
-function playVerticalSonority(index) {
-  const cantus = getNotesFromTextarea("cantus");
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const mode = getPlaybackMode();
-
-  const stepDuration = getStepDurationSeconds();
-  const noteDuration = Math.max(0.28, stepDuration * 0.95);
-
-  const cantusNote = cantus[index];
-  const counterpointNote = counterpoint[index];
-
-  if ((mode === "both" || mode === "cantus") && cantusNote) {
-    playNoteName(cantusNote, noteDuration, mode === "cantus" ? 1 : 0.72, "maleSample");
-  }
-
-  if ((mode === "both" || mode === "counterpoint") && counterpointNote) {
-    playNoteName(counterpointNote, noteDuration, 1);
-  }
-}
-
-function updatePlayPauseButton() {
-  const button = document.getElementById("playPauseButton");
-
-  if (!button) return;
-
-  button.textContent = isPlaying ? t("stop") : t("play");
-}
-
-function togglePlayback() {
-  if (isPlaying) {
-    stopPlayback(false);
-  } else {
-    startPlayback();
-  }
-}
-
-function startPlayback() {
-  const length = getPlaybackLength();
-
-  if (!length) return;
-
-  if (playbackIndex >= length) {
-    playbackIndex = 0;
-  }
-
-  getAudioContext();
-  isPlaying = true;
-  updatePlayPauseButton();
-  playCurrentStep();
-}
-
-function stopPlayback(resetToStart = false) {
-  isPlaying = false;
-
-  if (playbackTimerId !== null) {
-    window.clearTimeout(playbackTimerId);
-    playbackTimerId = null;
-  }
-
-  if (resetToStart) {
-    playbackIndex = 0;
-    selectedIndex = 0;
-  }
-
-  updatePlayPauseButton();
-  renderScore();
-}
-
-function playCurrentStep() {
-  if (!isPlaying) return;
-
-  const length = getPlaybackLength();
-
-  if (!length) {
-    stopPlayback(true);
-    return;
-  }
-
-  if (playbackIndex >= length) {
-    isPlaying = false;
-    playbackIndex = 0;
-    selectedIndex = 0;
-    updatePlayPauseButton();
-    renderScore();
-    return;
-  }
-
-  selectedIndex = playbackIndex;
-  renderScore();
-  playVerticalSonority(playbackIndex);
-
-  const stepMs = getStepDurationSeconds() * 1000;
-
-  playbackTimerId = window.setTimeout(() => {
-    playbackIndex += 1;
-
-    if (playbackIndex >= length) {
-      isPlaying = false;
-      playbackIndex = 0;
-      selectedIndex = 0;
-      playbackTimerId = null;
-      updatePlayPauseButton();
-      renderScore();
+    if (!sample) {
+      playFallbackMidiNote(midi, duration, gainScale);
       return;
     }
 
-    playCurrentStep();
-  }, stepMs);
-}
+    const now = ctx.currentTime;
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
 
-function noteToMidi(note) {
-  const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
-  if (!match) return null;
+    source.buffer = sample.buffer;
+    source.playbackRate.setValueAtTime(Math.pow(2, (midi - sample.rootMidi) / 12), now);
 
-  const pitch = match[1].toUpperCase();
-  const accidental = match[2] || "";
-  const octave = parseInt(match[3], 10);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(6200, now);
 
-  const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  let value = base[pitch];
+    const attack = 0.018;
+    const release = 0.30;
+    const targetGain = 0.72 * gainScale;
 
-  if (accidental === "#") value += 1;
-  if (accidental === "b") value -= 1;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, targetGain), now + attack);
+    gain.gain.setValueAtTime(Math.max(0.0001, targetGain), now + Math.max(attack + 0.02, duration - release));
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
 
-  return 12 * (octave + 1) + value;
-}
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(getReverbDestination());
 
-function midiToNote(midi, preference = "sharp") {
-  const sharpNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-  const flatNames = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
-
-  const pitch = ((midi % 12) + 12) % 12;
-  const octave = Math.floor(midi / 12) - 1;
-  const names = preference === "flat" ? flatNames : sharpNames;
-
-  return names[pitch] + octave;
-}
-
-function parseNote(note) {
-  const match = note.trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
-  if (!match) return null;
-
-  return {
-    letter: match[1].toUpperCase(),
-    accidental: match[2] || "",
-    octave: parseInt(match[3], 10)
-  };
-}
-
-function getDiatonicStep(note) {
-  const parsed = parseNote(note);
-  if (!parsed) return null;
-
-  return parsed.octave * 7 + NOTE_LETTER_STEPS[parsed.letter];
-}
-
-function getSimpleInterval(semitones) {
-  return Math.abs(semitones) % 12;
-}
-
-function getIntervalName(semitones) {
-  const abs = Math.abs(semitones);
-  const simple = abs % 12;
-  const intervals = t("intervals");
-
-  if (abs === 0) return intervals.perfectUnison;
-  if (abs === 12) return intervals.perfectOctave;
-
-  const names = {
-    0: intervals.compoundPerfect,
-    1: intervals.m2,
-    2: intervals.M2,
-    3: intervals.m3,
-    4: intervals.M3,
-    5: intervals.P4,
-    6: intervals.tritone,
-    7: intervals.P5,
-    8: intervals.m6,
-    9: intervals.M6,
-    10: intervals.m7,
-    11: intervals.M7
-  };
-
-  return names[simple] || intervals.unknown;
-}
-
-function isConsonant(semitones) {
-  const simple = getSimpleInterval(semitones);
-  return [0, 3, 4, 7, 8, 9].includes(simple);
-}
-
-function isPerfectFifth(semitones) {
-  return getSimpleInterval(semitones) === 7;
-}
-
-function isPerfectOctaveOrUnison(semitones) {
-  const abs = Math.abs(semitones);
-  return abs === 0 || getSimpleInterval(semitones) === 0;
-}
-
-function direction(a, b) {
-  if (b > a) return 1;
-  if (b < a) return -1;
-  return 0;
-}
-
-function getNotesFromTextarea(id) {
-  const el = document.getElementById(id);
-  if (!el) return [];
-
-  const value = el.value.trim();
-  if (!value) return [];
-
-  return value.split(/\s+/).filter(Boolean);
-}
-
-function setNotesToTextarea(id, notes) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  el.value = notes.filter(Boolean).join(" ");
-}
-
-function updateDisplays() {
-  const cantus = getNotesFromTextarea("cantus");
-  const counterpoint = getNotesFromTextarea("counterpoint");
-
-  const cantusDisplay = document.getElementById("cantusDisplay");
-  const counterpointDisplay = document.getElementById("counterpointDisplay");
-  const scoreStatus = document.getElementById("scoreStatus");
-
-  if (cantusDisplay) {
-    cantusDisplay.textContent = cantus.join(" ");
+    source.start(now);
+    source.stop(now + duration + release + 0.04);
   }
 
-  if (counterpointDisplay) {
-    counterpointDisplay.textContent = counterpoint.length
-      ? counterpoint.join(" ")
-      : t("noInput");
+
+
+  function $(id) {
+    return document.getElementById(id);
   }
 
-  if (scoreStatus) {
-    const length = getPlaybackLength();
-    const displayIndex = length ? Math.min(playbackIndex + 1, length) : 0;
-    scoreStatus.textContent = t("status")(counterpoint.length, cantus.length, displayIndex, length);
-  }
-}
-
-function addResult(results, type, message) {
-  results.push({ type, message });
-}
-
-function renderResults(results) {
-  const resultBox = document.getElementById("result");
-  if (!resultBox) return;
-
-  if (!results.length) {
-    resultBox.innerHTML = "";
-    return;
+  function svgEl(tag, attrs = {}) {
+    const el = document.createElementNS(SVG_NS, tag);
+    Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+    return el;
   }
 
-  resultBox.innerHTML = results
-    .map((item) => {
-      let label = t("labelOk");
-      if (item.type === "warn") label = t("labelWarn");
-      if (item.type === "error") label = t("labelError");
-
-      return `
-        <div class="result-item ${item.type}">
-          <span class="result-label">${label}</span>
-          ${item.message}
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function renderSummary(errorCount, warnCount, okCount) {
-  const summary = document.getElementById("summary");
-  if (!summary) return;
-
-  summary.removeAttribute("data-i18n");
-
-  if (errorCount === 0 && warnCount === 0) {
-    summary.innerHTML = t("summaryOk")(okCount);
-    return;
+  function createSvgImage(href, x, y, width, height, className = "", preserveAspectRatio = "xMidYMid meet") {
+    const image = svgEl("image", { x, y, width, height, href, class: className, preserveAspectRatio });
+    image.setAttributeNS("http://www.w3.org/1999/xlink", "href", href);
+    return image;
   }
 
-  summary.innerHTML = t("summaryCounts")(errorCount, warnCount, okCount);
-}
-
-function analyzeCounterpoint() {
-  analysisIssues = [];
-  const cantus = getNotesFromTextarea("cantus");
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const results = [];
-
-  let errorCount = 0;
-  let warnCount = 0;
-  let okCount = 0;
-
-  if (cantus.length === 0 || counterpoint.length === 0) {
-    addResult(results, "error", t("needInput"));
-    renderSummary(1, 0, 0);
-    renderResults(results);
-    renderScore();
-    return;
+  function clearSvg(svg) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
   }
 
-  if (cantus.length !== counterpoint.length) {
-    addResult(results, "error", t("lengthMismatch")(cantus.length, counterpoint.length));
-    errorCount++;
-  } else {
-    addResult(results, "ok", t("lengthOk")(cantus.length));
-    okCount++;
+  function parseNote(note) {
+    const match = String(note || "").trim().match(/^([A-Ga-g])(#|b)?(-?\d)$/);
+    if (!match) return null;
+    return {
+      letter: match[1].toUpperCase(),
+      accidental: match[2] || "",
+      octave: Number(match[3])
+    };
   }
 
-  const length = Math.min(cantus.length, counterpoint.length);
-  const cantusMidi = [];
-  const counterMidi = [];
-
-  for (let i = 0; i < length; i++) {
-    const cMidi = noteToMidi(cantus[i]);
-    const cpMidi = noteToMidi(counterpoint[i]);
-
-    cantusMidi.push(cMidi);
-    counterMidi.push(cpMidi);
-
-    if (cMidi === null || cpMidi === null) {
-      addResult(results, "error", t("invalidNote")(i + 1));
-      analysisIssues.push({ voice: "counterpoint", index: i, type: "error" });
-      errorCount++;
-      continue;
-    }
-
-    const interval = cpMidi - cMidi;
-    const intervalName = getIntervalName(interval);
-
-    if (isConsonant(interval)) {
-      addResult(results, "ok", t("intervalOk")(i + 1, cantus[i], counterpoint[i], intervalName));
-      okCount++;
-    } else {
-      addResult(results, "error", t("intervalBad")(i + 1, cantus[i], counterpoint[i], intervalName));
-      errorCount++;
-    }
+  function noteToMidi(note) {
+    const parsed = parseNote(note);
+    if (!parsed) return null;
+    const pcs = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    let pc = pcs[parsed.letter];
+    if (parsed.accidental === "#") pc += 1;
+    if (parsed.accidental === "b") pc -= 1;
+    return (parsed.octave + 1) * 12 + pc;
   }
 
-  if (length > 0 && cantusMidi[0] !== null && counterMidi[0] !== null) {
-    const firstInterval = counterMidi[0] - cantusMidi[0];
-
-    if (
-      Math.abs(firstInterval) === 0 ||
-      getSimpleInterval(firstInterval) === 7 ||
-      getSimpleInterval(firstInterval) === 0
-    ) {
-      addResult(results, "ok", t("startOk")(getIntervalName(firstInterval)));
-      okCount++;
-    } else {
-      addResult(results, "error", t("startBad")(getIntervalName(firstInterval)));
-      errorCount++;
-    }
+  function midiToFrequency(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  if (length > 0 && cantusMidi[length - 1] !== null && counterMidi[length - 1] !== null) {
-    const lastInterval = counterMidi[length - 1] - cantusMidi[length - 1];
-
-    if (Math.abs(lastInterval) === 0 || getSimpleInterval(lastInterval) === 0) {
-      addResult(results, "ok", t("endOk")(getIntervalName(lastInterval)));
-      okCount++;
-    } else {
-      addResult(results, "error", t("endBad")(getIntervalName(lastInterval)));
-      errorCount++;
-    }
+  function midiToNote(midi) {
+    const names = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
+    const pc = ((midi % 12) + 12) % 12;
+    const octave = Math.floor(midi / 12) - 1;
+    return `${names[pc]}${octave}`;
   }
 
-  for (let i = 0; i < length - 1; i++) {
-    const c1 = cantusMidi[i];
-    const c2 = cantusMidi[i + 1];
-    const cp1 = counterMidi[i];
-    const cp2 = counterMidi[i + 1];
-
-    if ([c1, c2, cp1, cp2].some((value) => value === null)) continue;
-
-    const interval1 = cp1 - c1;
-    const interval2 = cp2 - c2;
-
-    const cDir = direction(c1, c2);
-    const cpDir = direction(cp1, cp2);
-
-    const bothMove = cDir !== 0 && cpDir !== 0;
-    const sameDirection = cDir === cpDir;
-
-    if (bothMove && sameDirection && isPerfectFifth(interval1) && isPerfectFifth(interval2)) {
-      addResult(results, "error", t("parallelFifth")(i + 1));
-      errorCount++;
-    }
-
-    if (bothMove && sameDirection && isPerfectOctaveOrUnison(interval1) && isPerfectOctaveOrUnison(interval2)) {
-      addResult(results, "error", t("parallelOctave")(i + 1));
-      errorCount++;
-    }
+  
+  function diatonicStepIndex(note) {
+    const parsed = parseNote(note);
+    if (!parsed) return null;
+    const steps = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
+    return parsed.octave * 7 + steps[parsed.letter];
   }
 
-  renderSummary(errorCount, warnCount, okCount);
-  renderResults(results);
-  renderScore();
-}
-
-function createSvgElement(tag, attrs = {}) {
-  const el = document.createElementNS(SVG_NS, tag);
-
-  Object.entries(attrs).forEach(([key, value]) => {
-    el.setAttribute(key, value);
-  });
-
-  return el;
-}
-
-function clearSvg(svg) {
-  while (svg.firstChild) {
-    svg.removeChild(svg.firstChild);
+  function noteFromDiatonicStep(stepIndex) {
+    const letters = ["C", "D", "E", "F", "G", "A", "B"];
+    const octave = Math.floor(stepIndex / 7);
+    const letter = letters[((stepIndex % 7) + 7) % 7];
+    return `${letter}${octave}`;
   }
-}
 
-function noteToY(note, bottomLineY = SCORE.bottomLineY) {
-  const noteStep = getDiatonicStep(note);
-  const referenceNote = bottomLineY === SCORE.cantusBottomLineY ? "G2" : "E4";
-  const referenceStep = getDiatonicStep(referenceNote);
+  function getBottomLineReference(bottomLineY) {
+    return Math.abs(bottomLineY - SCORE.cantusBottomLineY) < 10 ? "G2" : "E4";
+  }
 
-  if (noteStep === null || referenceStep === null) return null;
 
-  return bottomLineY - (noteStep - referenceStep) * SCORE.noteStep;
-}
+  function midiToNoteSharp(midi) {
+    const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const pc = ((midi % 12) + 12) % 12;
+    const octave = Math.floor(midi / 12) - 1;
+    return `${names[pc]}${octave}`;
+  }
 
-function yToNaturalNote(y) {
-  const e4Step = getDiatonicStep("E4");
-  const rawStep = Math.round((SCORE.bottomLineY - y) / SCORE.noteStep);
-  const targetStep = e4Step + rawStep;
-
-  let closest = NATURAL_NOTES[0];
-  let closestDistance = Infinity;
-
-  NATURAL_NOTES.forEach((note) => {
-    const step = getDiatonicStep(note);
-    const distance = Math.abs(step - targetStep);
-
-    if (distance < closestDistance) {
-      closest = note;
-      closestDistance = distance;
-    }
-  });
-
-  return closest;
-}
-
-function getScorePositions(noteCount) {
-  const usableWidth = SCORE.width - SCORE.left - SCORE.right;
-  const count = Math.max(noteCount, 1);
-  const spacing = usableWidth / count;
-
-  return Array.from({ length: count }, (_, i) => SCORE.left + spacing * i + spacing / 2);
-}
+  function midiToNoteFlat(midi) {
+    const names = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+    const pc = ((midi % 12) + 12) % 12;
+    const octave = Math.floor(midi / 12) - 1;
+    return `${names[pc]}${octave}`;
+  }
 
 function moveNoteChromatic(note, semitone) {
-  const midi = noteToMidi(note);
-  if (midi === null) return note;
-
-  const preference = semitone > 0 ? "sharp" : "flat";
-  return midiToNote(midi + semitone, preference);
-}
-
-/* Editing selection must not move playbackIndex. */
-function moveSelectedNote(semitone) {
-  if (isPlaying) return;
-
-  const cantus = getNotesFromTextarea("cantus");
-  let counterpoint = getNotesFromTextarea("counterpoint");
-
-  if (!cantus.length) return;
-
-  const noteCount = cantus.length;
-
-  while (counterpoint.length < noteCount) {
-    counterpoint.push("");
-  }
-
-  if (selectedIndex < 0) selectedIndex = 0;
-  if (selectedIndex >= noteCount) selectedIndex = noteCount - 1;
-
-  const currentNote = counterpoint[selectedIndex];
-
-  if (!currentNote) {
-    counterpoint[selectedIndex] = "G4";
-  } else {
-    counterpoint[selectedIndex] = moveNoteChromatic(currentNote, semitone);
-  }
-
-  setNotesToTextarea("counterpoint", counterpoint);
-  renderScore();
-  playNoteName(counterpoint[selectedIndex], 0.45, 1, "femaleSample");
-}
-
-/* Left/right changes selectedIndex only. The red playhead stays at playbackIndex. */
-function moveSelection(delta) {
-  if (isPlaying) return;
-
-  const length = getPlaybackLength();
-
-  if (!length) return;
-
-  selectedIndex += delta;
-
-  if (selectedIndex < 0) selectedIndex = length - 1;
-  if (selectedIndex >= length) selectedIndex = 0;
-
-  renderScore();
-
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const note = counterpoint[selectedIndex];
-
-  if (note) {
-    playNoteName(note, 0.35, 0.8, "femaleSample");
-  }
-}
-
-function deleteSelectedNote() {
-  if (isPlaying) return;
-
-  const cantus = getNotesFromTextarea("cantus");
-  let counterpoint = getNotesFromTextarea("counterpoint");
-
-  if (!cantus.length) return;
-
-  while (counterpoint.length < cantus.length) {
-    counterpoint.push("");
-  }
-
-  counterpoint[selectedIndex] = "";
-  setNotesToTextarea("counterpoint", counterpoint);
-  renderScore();
-}
-
-function drawClef(svg, bottomLineY, clefType) {
-  const clef = clefType === "bass" ? "𝄢" : "𝄞";
-  const className = clefType === "bass" ? "clef-symbol bass" : "clef-symbol treble";
-  svg.appendChild(createSvgElement("text", { x: 52, y: bottomLineY - 20, class: className })).textContent = clef;
-}
-
-function drawStaff(svg, bottomLineY, label, noteCount, clefType = "treble") {
-  const startX = SCORE.left - 30;
-  const endX = SCORE.width - SCORE.right + 10;
-
-  for (let i = 0; i < 5; i++) {
-    const y = bottomLineY - i * SCORE.staffGap;
-    svg.appendChild(createSvgElement("line", {
-      x1: startX,
-      y1: y,
-      x2: endX,
-      y2: y,
-      class: "staff-line"
-    }));
-  }
-
-  drawClef(svg, bottomLineY, clefType);
-
-  svg.appendChild(createSvgElement("text", {
-    x: 22,
-    y: bottomLineY - 58,
-    class: "voice-label"
-  })).textContent = label;
-
-  const positions = getScorePositions(noteCount);
-
-  positions.forEach((x, i) => {
-    svg.appendChild(createSvgElement("circle", {
-      cx: x,
-      cy: bottomLineY + 56,
-      r: 2.6,
-      class: "slot-marker"
-    }));
-
-    svg.appendChild(createSvgElement("text", {
-      x: x - 4,
-      y: bottomLineY + 82,
-      class: "note-label"
-    })).textContent = i + 1;
-
-    if (i > 0) {
-      const midX = (positions[i - 1] + x) / 2;
-      svg.appendChild(createSvgElement("line", {
-        x1: midX,
-        y1: bottomLineY - 50,
-        x2: midX,
-        y2: bottomLineY + 66,
-        class: "measure-line"
-      }));
-    }
-  });
-}
-
-function drawPlayhead(svg, positions, noteCount) {
-  if (!noteCount) return;
-
-  const safeIndex = Math.min(playbackIndex, noteCount - 1);
-  const x = positions[safeIndex];
-
-  svg.appendChild(createSvgElement("rect", {
-    x: x - 20,
-    y: SCORE.playheadTop,
-    width: 40,
-    height: SCORE.playheadBottom - SCORE.playheadTop,
-    rx: 10,
-    class: "playhead-halo"
-  }));
-
-  svg.appendChild(createSvgElement("line", {
-    x1: x,
-    y1: SCORE.playheadTop,
-    x2: x,
-    y2: SCORE.playheadBottom,
-    class: "playhead-line"
-  }));
-}
-
-function drawLedgerLines(svg, x, y) {
-  const topLineY = SCORE.bottomLineY - 4 * SCORE.staffGap;
-  const bottomLineY = SCORE.bottomLineY;
-
-  if (y < topLineY - SCORE.noteStep) {
-    for (let ly = topLineY - 2 * SCORE.noteStep; ly >= y - 1; ly -= 2 * SCORE.noteStep) {
-      svg.appendChild(createSvgElement("line", { x1: x - 14, y1: ly, x2: x + 14, y2: ly, class: "ledger-line" }));
-    }
-  }
-
-  if (y > bottomLineY + SCORE.noteStep) {
-    for (let ly = bottomLineY + 2 * SCORE.noteStep; ly <= y + 1; ly += 2 * SCORE.noteStep) {
-      svg.appendChild(createSvgElement("line", { x1: x - 14, y1: ly, x2: x + 14, y2: ly, class: "ledger-line" }));
-    }
-  }
-}
-
-function drawAccidental(svg, parsed, x, y, isCantus, isSelected, isCurrentPlayback, issueClass = "") {
-  if (!parsed.accidental) return;
-  const symbol = parsed.accidental === "#" ? "♯" : "♭";
-
-  svg.appendChild(createSvgElement("text", {
-    x: x - 30,
-    y: y + 1,
-    class: `accidental${isCantus ? " cantus" : ""}${isSelected ? " selected" : ""}${isCurrentPlayback ? " playing" : ""}${issueClass ? " " + issueClass : ""}`
-  })).textContent = symbol;
-}
-
-function getIssueFor(voice, index) {
-  if (!Array.isArray(analysisIssues)) return null;
-  const exactError = analysisIssues.find((issue) => issue.voice === voice && issue.index === index && issue.type === "error");
-  if (exactError) return exactError;
-  const exactWarn = analysisIssues.find((issue) => issue.voice === voice && issue.index === index && issue.type === "warn");
-  if (exactWarn) return exactWarn;
-  return null;
-}
-
-function getIssueClass(voice, index) {
-  const issue = getIssueFor(voice, index);
-  return issue ? issue.type : "";
-}
-
-function drawIssueRing(svg, x, y, issueClass) {
-  if (!issueClass) return;
-  svg.appendChild(createSvgElement("circle", {
-    cx: x,
-    cy: y,
-    r: 15,
-    class: issueClass === "warn" ? "issue-ring warn" : "issue-ring"
-  }));
-}
-
-function drawNote(svg, note, x, voice, index, bottomLineY) {
-  const y = noteToY(note, bottomLineY);
-  const parsed = parseNote(note);
-  if (y === null || !parsed) return;
-
-  const isCantus = voice === "cantus";
-  const isSelected = !isCantus && index === selectedIndex && !isPlaying;
-  const isCurrentPlayback = index === playbackIndex && isPlaying;
-  const issueClass = getIssueClass(voice, index);
-
-  drawLedgerLines(svg, x, y, bottomLineY);
-  drawIssueRing(svg, x, y, issueClass);
-  drawAccidental(svg, parsed, x, y, isCantus, isSelected, isCurrentPlayback, issueClass);
-
-  svg.appendChild(createSvgElement("ellipse", {
-    cx: x,
-    cy: y,
-    rx: 8.5,
-    ry: 5.8,
-    transform: `rotate(-18 ${x} ${y})`,
-    class: [
-      "note-head",
-      isCantus ? "cantus" : "",
-      isCurrentPlayback ? "playing" : "",
-      isSelected ? "selected" : "",
-      issueClass
-    ].filter(Boolean).join(" ")
-  }));
-
-  svg.appendChild(createSvgElement("line", {
-    x1: isCantus ? x - 7 : x + 7,
-    y1: y,
-    x2: isCantus ? x - 7 : x + 7,
-    y2: isCantus ? y + 34 : y - 34,
-    class: [
-      "note-stem",
-      isCantus ? "cantus" : "",
-      isCurrentPlayback ? "playing" : "",
-      isSelected ? "selected" : "",
-      issueClass
-    ].filter(Boolean).join(" ")
-  }));
-
-  svg.appendChild(createSvgElement("text", {
-    x: x - 12,
-    y: isCantus ? bottomLineY + 48 : bottomLineY - 62,
-    class: [
-      "note-label",
-      isCurrentPlayback ? "playing" : "",
-      isSelected ? "selected" : "",
-      issueClass
-    ].filter(Boolean).join(" ")
-  })).textContent = note;
-}
-
-function renderScore() {
-  const svg = document.getElementById("scoreEditor");
-  if (!svg) return;
-
-  clearSvg(svg);
-
-  const cantus = getNotesFromTextarea("cantus");
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  const noteCount = Math.max(cantus.length, counterpoint.length, 1);
-  const positions = getScorePositions(noteCount);
-
-  if (selectedIndex >= noteCount) selectedIndex = noteCount - 1;
-  if (selectedIndex < 0) selectedIndex = 0;
-  if (playbackIndex >= noteCount) playbackIndex = 0;
-  if (playbackIndex < 0) playbackIndex = 0;
-
-  drawStaff(svg, SCORE.bottomLineY, "Counterpoint / treble clef", noteCount, "treble");
-  drawStaff(svg, SCORE.cantusBottomLineY, "Cantus / bass clef", noteCount, "bass");
-  drawPlayhead(svg, positions, noteCount);
-
-  cantus.forEach((note, i) => drawNote(svg, note, positions[i], "cantus", i, SCORE.cantusBottomLineY));
-
-  counterpoint.forEach((note, i) => {
-    if (note) {
-      drawNote(svg, note, positions[i], "counterpoint", i, SCORE.bottomLineY);
-    }
-  });
-
-  updateDisplays();
-}
-
-/* Clicking edits/selects a note only. It does not move the red playhead. */
-function handleScoreClick(event) {
-  if (isPlaying) return;
-
-  const svg = document.getElementById("scoreEditor");
-  if (!svg) return;
-
-  const rect = svg.getBoundingClientRect();
-
-  const viewX = ((event.clientX - rect.left) / rect.width) * SCORE.width;
-  const viewY = ((event.clientY - rect.top) / rect.height) * SCORE.height;
-
-  const cantus = getNotesFromTextarea("cantus");
-  let counterpoint = getNotesFromTextarea("counterpoint");
-
-  const noteCount = Math.max(cantus.length, 1);
-  const positions = getScorePositions(noteCount);
-
-  let nearestIndex = 0;
-  let nearestDistance = Infinity;
-
-  positions.forEach((x, i) => {
-    const distance = Math.abs(x - viewX);
-
-    if (distance < nearestDistance) {
-      nearestIndex = i;
-      nearestDistance = distance;
-    }
-  });
-
-  const clickedNote = yToNaturalNote(viewY);
-
-  while (counterpoint.length < noteCount) {
-    counterpoint.push("");
-  }
-
-  selectedIndex = nearestIndex;
-  counterpoint[nearestIndex] = clickedNote;
-
-  setNotesToTextarea("counterpoint", counterpoint);
-  renderScore();
-  playNoteName(clickedNote, 0.55, 1, "femaleSample");
-
-  svg.focus();
-}
-
-function undoCounterpointNote() {
-  if (isPlaying) return;
-
-  const counterpoint = getNotesFromTextarea("counterpoint");
-  counterpoint.pop();
-
-  if (selectedIndex >= counterpoint.length) selectedIndex = Math.max(0, counterpoint.length - 1);
-  if (playbackIndex >= counterpoint.length) playbackIndex = Math.max(0, counterpoint.length - 1);
-
-  setNotesToTextarea("counterpoint", counterpoint);
-  renderScore();
-}
-
-function clearCounterpoint() {
-  stopPlayback(true);
-  selectedIndex = 0;
-  playbackIndex = 0;
-  setNotesToTextarea("counterpoint", []);
-  renderScore();
-}
-
-function populateExerciseSelect(keepValue = false) {
-  const select = document.getElementById("exerciseSelect");
-  const levelFilter = document.getElementById("levelFilterSelect");
-  if (!select) return;
-
-  const previousValue = select.value;
-  const selectedLevel = levelFilter ? levelFilter.value : "all";
-
-  const filteredExercises = EXERCISES.filter((exercise) => {
-    return selectedLevel === "all" || exercise.level === selectedLevel;
-  });
-
-  select.innerHTML = "";
-
-  filteredExercises.forEach((exercise, index) => {
-    const option = document.createElement("option");
-    option.value = exercise.id;
-    option.textContent = `${getLevelName(exercise.level)}｜${exercise.title[currentLanguage] || exercise.title.ja}`;
-
-    if ((keepValue && previousValue === exercise.id) || (!keepValue && index === 0)) {
-      option.selected = true;
-    }
-
-    select.appendChild(option);
-  });
-
-  if (!filteredExercises.some((exercise) => exercise.id === select.value) && filteredExercises.length) {
-    select.value = filteredExercises[0].id;
-  }
-
-  updateExerciseDescription();
-}
-
-function getSelectedExercise() {
-  const select = document.getElementById("exerciseSelect");
-  if (!select) return EXERCISES[0];
-
-  return EXERCISES.find((exercise) => exercise.id === select.value) || EXERCISES[0];
-}
-
-function updateExerciseDescription() {
-  const description = document.getElementById("exerciseDescription");
-  const exercise = getSelectedExercise();
-
-  if (!description || !exercise) return;
-
-  description.innerHTML = `
-    <span class="level-badge ${exercise.level}">${getLevelName(exercise.level)}</span>
-    ${exercise.description[currentLanguage] || exercise.description.ja}
-  `;
-}
-
-function loadSelectedExercise() {
-  const exercise = getSelectedExercise();
-
-  if (!exercise) return;
-
-  stopPlayback(true);
-  setNotesToTextarea("cantus", exercise.cantus);
-  setNotesToTextarea("counterpoint", exercise.counterpoint || []);
-
-  selectedIndex = 0;
-  playbackIndex = 0;
-  renderScore();
-}
-
-function setExample() {
-  const select = document.getElementById("exerciseSelect");
-
-  if (select) {
-    select.value = "species1-example-filled";
-    updateExerciseDescription();
-  }
-
-  loadSelectedExercise();
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  const svg = document.getElementById("scoreEditor");
-
-  if (svg) {
-    svg.addEventListener("click", handleScoreClick);
-  }
-
-  document.addEventListener("keydown", (event) => {
-    const activeTag = document.activeElement?.tagName?.toLowerCase();
-    const isTextInput = activeTag === "textarea" || activeTag === "input" || activeTag === "select";
-
-    if (event.code === "Space") {
-      event.preventDefault();
-      togglePlayback();
-      return;
-    }
-
-    if (isTextInput) {
-      return;
-    }
-
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      moveSelection(1);
-      return;
-    }
-
-    if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      moveSelection(-1);
-      return;
-    }
-
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      moveSelectedNote(1);
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      moveSelectedNote(-1);
-      return;
-    }
-
-    if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      deleteSelectedNote();
-      return;
-    }
-  });
-
-  const exerciseSelect = document.getElementById("exerciseSelect");
-  if (exerciseSelect) {
-    exerciseSelect.addEventListener("change", updateExerciseDescription);
-  }
-
-  const levelFilterSelect = document.getElementById("levelFilterSelect");
-  if (levelFilterSelect) {
-    levelFilterSelect.addEventListener("change", () => populateExerciseSelect(false));
-  }
-
-  const languageSelect = document.getElementById("languageSelect");
-  if (languageSelect) {
-    languageSelect.value = currentLanguage;
-  }
-
-  populateExerciseSelect();
-  setLanguage(currentLanguage);
-  renderScore();
-  updatePlayPauseButton();
-});
-
-
-
-function midiEncodeVariableLength(value) {
-  let buffer = value & 0x7f;
-  const bytes = [];
-
-  while ((value >>= 7)) {
-    buffer <<= 8;
-    buffer |= ((value & 0x7f) | 0x80);
-  }
-
-  while (true) {
-    bytes.push(buffer & 0xff);
-    if (buffer & 0x80) buffer >>= 8;
-    else break;
-  }
-
-  return bytes;
-}
-
-function midiTextBytes(text) {
-  return Array.from(text).map((char) => char.charCodeAt(0) & 0xff);
-}
-
-function midiNumberToBytes(value, length) {
-  const bytes = [];
-  for (let i = length - 1; i >= 0; i--) {
-    bytes.push((value >> (i * 8)) & 0xff);
-  }
-  return bytes;
-}
-
-function midiTrackChunk(events) {
-  const data = [];
-  events.forEach((event) => data.push(...event));
-
-  const header = midiTextBytes("MTrk");
-  const length = midiNumberToBytes(data.length, 4);
-  return [...header, ...length, ...data];
-}
-
-function midiNoteEvent(delta, status, note, velocity) {
-  return [...midiEncodeVariableLength(delta), status, note, velocity];
-}
-
-function midiMetaEvent(delta, type, data) {
-  return [...midiEncodeVariableLength(delta), 0xff, type, data.length, ...data];
-}
-
-function midiCreateFile(tracks, ticksPerQuarter = 480) {
-  const header = [
-    ...midiTextBytes("MThd"),
-    0x00, 0x00, 0x00, 0x06,
-    0x00, 0x01,
-    ...midiNumberToBytes(tracks.length, 2),
-    ...midiNumberToBytes(ticksPerQuarter, 2)
-  ];
-
-  return new Uint8Array([...header, ...tracks.flat()]);
-}
-
-function midiDownload(bytes, filename) {
-  const blob = new Blob([bytes], { type: "audio/midi" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function midiBuildNoteTrack(trackName, notes, channel, ticksPerNote, velocity = 84) {
-  const events = [];
-  events.push(midiMetaEvent(0, 0x03, midiTextBytes(trackName)));
-
-  let pendingDelta = 0;
-
-  notes.forEach((note) => {
     const midi = noteToMidi(note);
+    if (midi === null) return note;
 
-    if (midi === null) {
-      pendingDelta += ticksPerNote;
+    const nextMidi = midi + semitone;
+    if (semitone > 0) {
+      return midiToNoteSharp(nextMidi);
+    }
+
+    if (semitone < 0) {
+      return midiToNoteFlat(nextMidi);
+    }
+
+    return note;
+  }
+
+  function noteToY(note, bottomLineY) {
+    const noteStep = diatonicStepIndex(note);
+    if (noteStep === null) return null;
+
+    const referenceNote = getBottomLineReference(bottomLineY);
+    const referenceStep = diatonicStepIndex(referenceNote);
+    if (referenceStep === null) return null;
+
+    const diatonicDistance = noteStep - referenceStep;
+    return bottomLineY - (diatonicDistance * (SCORE.staffGap / 2));
+  }
+
+  function yToNaturalNote(y) {
+    const referenceStep = diatonicStepIndex("E4");
+    const diatonicDistance = Math.round((SCORE.counterpointBottomLineY - y) / (SCORE.staffGap / 2));
+    const targetStep = referenceStep + diatonicDistance;
+
+    return noteFromDiatonicStep(targetStep);
+  }
+
+  function getNotesFromTextarea(id) {
+    const el = $(id);
+    if (!el || !el.value.trim()) return [];
+    return el.value.trim().split(/\s+/).filter(Boolean);
+  }
+
+  function setNotesToTextarea(id, notes) {
+    const el = $(id);
+    if (!el) return;
+    el.value = Array.isArray(notes) ? notes.filter(Boolean).join(" ") : String(notes || "");
+  }
+
+  function getSenzokuScoreWidth(noteCount) {
+    const count = Math.max(noteCount, 1);
+    return Math.max(SCORE.width, SCORE.left + count * SCORE.measureWidth + SCORE.right + 48);
+  }
+
+  function getMeasureStartX(index) {
+    return SCORE.left + index * SCORE.measureWidth;
+  }
+
+  function getMeasureNoteX(index) {
+    return getMeasureStartX(index) + SCORE.measureWidth * 0.54;
+  }
+
+  function getScorePositions(noteCount) {
+    return Array.from({ length: Math.max(noteCount, 1) }, (_, i) => getMeasureNoteX(i));
+  }
+
+  function getMeasureIndexFromX(x, noteCount) {
+    const raw = Math.floor((x - SCORE.left) / SCORE.measureWidth);
+    return Math.max(0, Math.min(Math.max(noteCount, 1) - 1, raw));
+  }
+
+  function populateExercises() {
+    const select = $("exerciseSelect");
+    if (!select) return;
+
+    select.innerHTML = "";
+    EXERCISES.forEach((exercise) => {
+      const option = document.createElement("option");
+      option.value = exercise.id;
+      option.textContent = exercise.title;
+      select.appendChild(option);
+    });
+  }
+
+  function getSelectedExercise() {
+    const select = $("exerciseSelect");
+    const id = select && select.value ? select.value : EXERCISES[0].id;
+    return EXERCISES.find((exercise) => exercise.id === id) || EXERCISES[0];
+  }
+
+  function updateExerciseDescription() {
+    const desc = $("exerciseDescription");
+    const exercise = getSelectedExercise();
+    if (desc) desc.textContent = exercise ? exercise.desc : "課題を選択してください。";
+  }
+
+  function loadSelectedExercise() {
+    const exercise = getSelectedExercise();
+    if (!exercise) return;
+
+    setNotesToTextarea("cantus", exercise.cantus);
+    setNotesToTextarea("counterpoint", []);
+    selectedIndex = 0;
+    playbackIndex = 0;
+    stopPlayback(false);
+    updateExerciseDescription();
+    renderScore();
+    updateDisplays();
+  }
+
+  function loadExample() {
+    setNotesToTextarea("cantus", ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"]);
+    setNotesToTextarea("counterpoint", ["G4", "F4", "G4", "A4", "B4", "A4", "G4", "F4", "C5"]);
+    selectedIndex = 0;
+    playbackIndex = 0;
+    stopPlayback(false);
+    renderScore();
+    updateDisplays();
+  }
+
+  function drawSenzokuMeasureHighlight(svg) {
+    const x = getMeasureStartX(selectedIndex);
+
+    svg.appendChild(svgEl("rect", {
+      x,
+      y: SCORE.counterpointBottomLineY - 112,
+      width: SCORE.measureWidth,
+      height: 156,
+      class: "senzoku-input-highlight"
+    }));
+
+    svg.appendChild(svgEl("line", {
+      x1: x,
+      y1: SCORE.counterpointBottomLineY - 118,
+      x2: x,
+      y2: SCORE.counterpointBottomLineY + 66,
+      class: "senzoku-cursor-line"
+    }));
+
+    svg.appendChild(svgEl("path", {
+      d: `M ${x - 5} ${SCORE.counterpointBottomLineY - 116} L ${x + 5} ${SCORE.counterpointBottomLineY - 116} L ${x} ${SCORE.counterpointBottomLineY - 106} Z`,
+      class: "senzoku-cursor-triangle"
+    }));
+  }
+
+  function drawClef(svg, bottomLineY, clefType = "treble") {
+    const isBass = clefType === "bass";
+    const href = isBass ? NOTATION_IMAGES.bassClef : NOTATION_IMAGES.trebleClef;
+    const width = isBass ? 68 : 72;
+    const height = isBass ? 88 : 136;
+    const x = SCORE.left - 60;
+    const y = isBass ? bottomLineY - 76 : bottomLineY - 117;
+
+    // SVG fallback clef below PNG.
+    const fallback = svgEl("text", {
+      x: SCORE.left - 54,
+      y: isBass ? bottomLineY - 20 : bottomLineY - 25,
+      class: ["stable-clef", isBass ? "bass" : "treble", "clef-fallback"].join(" ")
+    });
+    fallback.textContent = isBass ? "𝄢" : "𝄞";
+    svg.appendChild(fallback);
+
+    svg.appendChild(createSvgImage(href, x, y, width, height, `png-notation png-clef ${isBass ? "bass" : "treble"}`));
+  }
+
+  function drawStaff(svg, bottomLineY, noteCount, clefType = "treble") {
+    const staffX = SCORE.left - 18;
+    const staffEndX = Math.max(staffX + SCORE.measureWidth, getMeasureStartX(noteCount));
+    const staffY = bottomLineY - SCORE.staffGap * 4;
+    const staffWidth = Math.max(SCORE.measureWidth, staffEndX - staffX);
+    const staffHeight = SCORE.staffGap * 4 + 2;
+
+    for (let i = 0; i < 5; i += 1) {
+      const y = bottomLineY - SCORE.staffGap * i;
+      svg.appendChild(svgEl("line", { x1: staffX, y1: y, x2: staffEndX, y2: y, class: "stable-staff-line png-staff-fallback-line" }));
+    }
+
+    svg.appendChild(createSvgImage(NOTATION_IMAGES.staff, staffX, staffY - 1, staffWidth, staffHeight + 2, "png-notation png-staff", "none"));
+    drawClef(svg, bottomLineY, clefType);
+
+    if (clefType === "bass") {
+      getScorePositions(noteCount).forEach((x, i) => {
+        const label = svgEl("text", { x: x - 4, y: bottomLineY + 78, class: "note-label" });
+        label.textContent = String(i + 1);
+        svg.appendChild(label);
+      });
+    }
+  }
+
+  function drawBarlines(svg, noteCount) {
+    const top = SCORE.counterpointBottomLineY - 96;
+    const bottom = SCORE.cantusBottomLineY + 56;
+    for (let i = 0; i <= noteCount; i += 1) {
+      const x = getMeasureStartX(i);
+      svg.appendChild(svgEl("line", { x1: x, y1: top, x2: x, y2: bottom, class: i % 4 === 0 ? "senzoku-measure-line strong" : "senzoku-measure-line" }));
+    }
+  }
+
+  function drawVoiceLabels(svg) {
+    const cp = svgEl("text", { x: 22, y: SCORE.counterpointBottomLineY - 76, class: "voice-label senzoku-label" });
+    cp.textContent = "Counterpoint";
+    svg.appendChild(cp);
+
+    const cf = svgEl("text", { x: 22, y: SCORE.cantusBottomLineY - 76, class: "voice-label senzoku-label" });
+    cf.textContent = "Cantus";
+    svg.appendChild(cf);
+  }
+
+  function drawAccidental(svg, parsed, x, y, className = "") {
+    if (!parsed || !parsed.accidental) return;
+
+    const fallback = svgEl("text", { x: x - 27, y: y + 1, class: ["stable-accidental", className].join(" ") });
+    fallback.textContent = parsed.accidental === "#" ? "♯" : "♭";
+    svg.appendChild(fallback);
+
+    const href = parsed.accidental === "#" ? NOTATION_IMAGES.sharp : NOTATION_IMAGES.flat;
+    const width = parsed.accidental === "#" ? SCORE.accidentalWidth : 18;
+    const height = parsed.accidental === "#" ? SCORE.accidentalHeight : 46;
+    svg.appendChild(createSvgImage(href, x - 34, y - height * 0.53, width, height, ["png-notation", "png-accidental", className].join(" ")));
+  }
+
+  function getIssueClass() {
+    return "";
+  }
+
+  function drawLedgerLines(svg, x, y, bottomLineY) {
+    const topLineY = bottomLineY - SCORE.staffGap * 4;
+    const halfGap = SCORE.staffGap / 2;
+
+    if (y > bottomLineY + halfGap) {
+      for (let ly = bottomLineY + SCORE.staffGap; ly <= y + 0.1; ly += SCORE.staffGap) {
+        svg.appendChild(svgEl("line", {
+          x1: x - 23,
+          y1: ly,
+          x2: x + 23,
+          y2: ly,
+          class: "ledger-line"
+        }));
+      }
+    }
+
+    if (y < topLineY - halfGap) {
+      for (let ly = topLineY - SCORE.staffGap; ly >= y - 0.1; ly -= SCORE.staffGap) {
+        svg.appendChild(svgEl("line", {
+          x1: x - 23,
+          y1: ly,
+          x2: x + 23,
+          y2: ly,
+          class: "ledger-line"
+        }));
+      }
+    }
+  }
+
+  function drawIssueRing() {
+    // minimal stable version
+  }
+
+  function isVoiceMuted(voice) {
+    return !!voiceMuteState[voice];
+  }
+
+  function drawNote(svg, note, x, voice, index, bottomLineY) {
+    const y = noteToY(note, bottomLineY);
+    const parsed = parseNote(note);
+    if (y === null || !parsed) return;
+
+    const isCantus = voice === "cantus";
+    const muted = isVoiceMuted(isCantus ? "cantus" : "counterpoint");
+    const isSelected = !isCantus && index === selectedIndex && !isPlaying;
+    const isCurrentPlayback = index === playbackIndex && isPlaying;
+    const noteDrawY = y + (isCantus ? -2 : -0.5);
+
+    drawLedgerLines(svg, x, y, bottomLineY);
+    drawAccidental(svg, parsed, x, y, [
+      isCantus ? "cantus" : "",
+      muted ? "muted-voice" : "",
+      isSelected ? "selected" : "",
+      isCurrentPlayback ? "playing" : ""
+    ].filter(Boolean).join(" "));
+    svg.appendChild(createSvgImage(
+      NOTATION_IMAGES.wholeNote,
+      x - SCORE.noteImageWidth / 2,
+      noteDrawY - SCORE.noteImageHeight / 2,
+      SCORE.noteImageWidth,
+      SCORE.noteImageHeight,
+      ["png-notation", "png-notehead", "png-whole-note", isCantus ? "cantus" : "", muted ? "muted-voice" : "", isSelected ? "selected" : "", isCurrentPlayback ? "playing" : ""].filter(Boolean).join(" ")
+    ));
+
+    if (!isCantus && isSelected) {
+      svg.appendChild(svgEl("circle", { cx: x, cy: y, r: 13, class: "senzoku-selected-ring" }));
+    }
+  }
+
+  function renderScore() {
+    const svg = $("scoreEditor");
+    if (!svg) return;
+
+    clearSvg(svg);
+
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    const noteCount = Math.max(cantus.length, counterpoint.length, 1);
+    const scoreWidth = getSenzokuScoreWidth(noteCount);
+    const positions = getScorePositions(noteCount);
+
+    svg.setAttribute("viewBox", `0 0 ${scoreWidth} ${SCORE.height}`);
+    svg.setAttribute("width", String(scoreWidth));
+    svg.setAttribute("height", String(SCORE.height));
+    svg.style.width = `${scoreWidth}px`;
+    svg.style.minWidth = `${scoreWidth}px`;
+    svg.style.height = `${SCORE.height}px`;
+
+    selectedIndex = Math.max(0, Math.min(noteCount - 1, selectedIndex));
+    playbackIndex = Math.max(0, Math.min(noteCount - 1, playbackIndex));
+
+    drawSenzokuMeasureHighlight(svg);
+    drawStaff(svg, SCORE.counterpointBottomLineY, noteCount, "treble");
+    drawStaff(svg, SCORE.cantusBottomLineY, noteCount, "bass");
+    drawBarlines(svg, noteCount);
+    drawVoiceLabels(svg);
+
+    counterpoint.forEach((note, i) => {
+      if (note) drawNote(svg, note, positions[i], "counterpoint", i, SCORE.counterpointBottomLineY);
+    });
+
+    cantus.forEach((note, i) => {
+      if (note) drawNote(svg, note, positions[i], "cantus", i, SCORE.cantusBottomLineY);
+    });
+
+    updateDisplays();
+    syncVoiceMuteButtons();
+  }
+
+  function clickToScorePoint(event) {
+    const svg = $("scoreEditor");
+    if (!svg) return null;
+    const rect = svg.getBoundingClientRect();
+    const viewBox = svg.viewBox.baseVal;
+    return {
+      viewX: ((event.clientX - rect.left) / rect.width) * viewBox.width,
+      viewY: ((event.clientY - rect.top) / rect.height) * viewBox.height
+    };
+  }
+
+  function handleScoreClick(event) {
+    if (isPlaying) return;
+
+    ensureAudioReady();
+
+    const point = clickToScorePoint(event);
+    if (!point) return;
+
+    if (point.viewY > (SCORE.counterpointBottomLineY + SCORE.cantusBottomLineY) / 2) return;
+
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    const noteCount = Math.max(cantus.length, counterpoint.length, 1);
+    const index = getMeasureIndexFromX(point.viewX, noteCount);
+
+    while (counterpoint.length < noteCount) counterpoint.push("");
+
+    const existing = counterpoint[index];
+    const noteX = getMeasureNoteX(index);
+    const existingY = existing ? noteToY(existing, SCORE.counterpointBottomLineY) : null;
+
+    selectedIndex = index;
+
+    if (existing && existingY !== null && Math.abs(point.viewX - noteX) < 28 && Math.abs(point.viewY - existingY) < 24) {
+      setNotesToTextarea("counterpoint", counterpoint);
+      renderScore();
+      playNoteName(existing, 0.65, 1.15, "femaleSample");
       return;
     }
 
-    events.push(midiNoteEvent(pendingDelta, 0x90 + channel, midi, velocity));
-    events.push(midiNoteEvent(ticksPerNote, 0x80 + channel, midi, 0));
-    pendingDelta = 0;
-  });
-
-  events.push(midiMetaEvent(pendingDelta, 0x2f, []));
-  return midiTrackChunk(events);
-}
-
-function exportMidi() {
-  const ticksPerQuarter = 480;
-  const tempoMicroseconds = 1000000; // 60 BPM
-  const cantus = getNotesFromTextarea("cantus");
-  const counterpoint = getNotesFromTextarea("counterpoint");
-
-  if (!cantus.length && !counterpoint.length) {
-    alert(currentLanguage === "fr" ? "Aucune note à exporter." : "書き出す音がありません。");
-    return;
+    const newNote = yToNaturalNote(point.viewY);
+    counterpoint[index] = newNote;
+    setNotesToTextarea("counterpoint", counterpoint);
+    renderScore();
+    playNoteName(newNote, 0.65, 1.15, "femaleSample");
   }
 
-  const cantusTicks = ticksPerQuarter * 4;
-  const counterpointTicks = Math.max(1, Math.round(cantusTicks / SCORE.quartersPerCantus));
+  function moveSelection(delta) {
+    const length = Math.max(getPlaybackLength(), 1);
+    selectedIndex = Math.max(0, Math.min(length - 1, selectedIndex + delta));
+    renderScore();
 
-  const conductorEvents = [
-    midiMetaEvent(0, 0x03, midiTextBytes("Tempo / Meter")),
-    midiMetaEvent(0, 0x51, [0x0f, 0x42, 0x40]),
-    midiMetaEvent(0, 0x58, [0x04, 0x02, 0x18, 0x08]),
-    midiMetaEvent(0, 0x2f, [])
-  ];
+    const note = getNotesFromTextarea("counterpoint")[selectedIndex];
+    if (note) playNoteName(note, 0.55, 1.1, "femaleSample");
+  }
 
-  const tracks = [
-    midiTrackChunk(conductorEvents),
-    midiBuildNoteTrack("Cantus / whole notes", cantus, 0, cantusTicks, 72),
-    midiBuildNoteTrack("Counterpoint", counterpoint, 1, counterpointTicks, 86)
-  ];
+  function moveSelectedNote(semitone) {
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    const length = Math.max(cantus.length, counterpoint.length, 1);
 
-  const bytes = midiCreateFile(tracks, ticksPerQuarter);
-  midiDownload(bytes, "counterpoint_tempo60_4-4.mid");
-}
+    while (counterpoint.length < length) counterpoint.push("");
 
+    selectedIndex = Math.max(0, Math.min(length - 1, selectedIndex));
+    const current = counterpoint[selectedIndex] || "G4";
+    const next = moveNoteChromatic(current, semitone);
+
+    counterpoint[selectedIndex] = next;
+    setNotesToTextarea("counterpoint", counterpoint);
+    renderScore();
+    playNoteName(next, 0.55, 1.1, "femaleSample");
+  }
+
+  function undoCounterpointNote() {
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    counterpoint.pop();
+    selectedIndex = Math.max(0, counterpoint.length - 1);
+    setNotesToTextarea("counterpoint", counterpoint);
+    renderScore();
+  }
+
+  function clearCounterpoint() {
+    setNotesToTextarea("counterpoint", []);
+    selectedIndex = 0;
+    renderScore();
+  }
+
+  function deleteSelectedNote() {
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    if (selectedIndex >= 0 && selectedIndex < counterpoint.length) {
+      counterpoint[selectedIndex] = "";
+      setNotesToTextarea("counterpoint", counterpoint);
+      renderScore();
+    }
+  }
+
+  function playSelectedNote() {
+    const note = getNotesFromTextarea("counterpoint")[selectedIndex];
+    if (note) playNoteName(note, 0.75, 1.15, "femaleSample");
+  }
+
+  function getPlaybackLength() {
+    return Math.max(getNotesFromTextarea("cantus").length, getNotesFromTextarea("counterpoint").length, 1);
+  }
+
+  function getStepDurationSeconds() {
+    const tempo = Math.min(180, Math.max(40, Number($("tempoInput")?.value) || 72));
+    return 60 / tempo;
+  }
+
+  function getAudioContext() {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    return audioContext;
+  }
+
+  function ensureAudioReady() {
+    const ctx = getAudioContext();
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  function getReverbDestination() {
+    const ctx = ensureAudioReady();
+    if (reverbNodes && reverbNodes.context === ctx) return reverbNodes.input;
+
+    const input = ctx.createGain();
+    const dry = ctx.createGain();
+    const wet = ctx.createGain();
+
+    const preDelay = ctx.createDelay(0.25);
+    const earlyDelay = ctx.createDelay(0.35);
+    const lateDelay = ctx.createDelay(0.55);
+    const feedback = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    dry.gain.value = 0.76;
+    wet.gain.value = 0.24;
+
+    preDelay.delayTime.value = 0.035;
+    earlyDelay.delayTime.value = 0.075;
+    lateDelay.delayTime.value = 0.145;
+    feedback.gain.value = 0.28;
+
+    filter.type = "lowpass";
+    filter.frequency.value = 4300;
+
+    input.connect(dry);
+    dry.connect(ctx.destination);
+
+    input.connect(wet);
+    wet.connect(preDelay);
+    preDelay.connect(earlyDelay);
+    earlyDelay.connect(lateDelay);
+    lateDelay.connect(filter);
+    filter.connect(ctx.destination);
+
+    filter.connect(feedback);
+    feedback.connect(earlyDelay);
+
+    reverbNodes = { context: ctx, input };
+    return input;
+  }
+
+  function playFallbackMidiNote(midi, duration = 0.75, gainScale = 1) {
+    const ctx = ensureAudioReady();
+    const now = ctx.currentTime;
+    const freq = midiToFrequency(midi);
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc1.type = "triangle";
+    osc2.type = "sine";
+    osc1.frequency.setValueAtTime(freq, now);
+    osc2.frequency.setValueAtTime(freq * 2, now);
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(2200, now);
+
+    const attack = 0.025;
+    const release = 0.30;
+    const targetGain = 0.34 * gainScale;
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, targetGain), now + attack);
+    gain.gain.setValueAtTime(Math.max(0.0001, targetGain), now + Math.max(attack + 0.02, duration - release));
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(getReverbDestination());
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration + release + 0.04);
+    osc2.stop(now + duration + release + 0.04);
+  }
+
+function playMidiNote(midi, duration = 0.75, gainScale = 1, voiceSet = "femaleSample") {
+    ensureAudioReady();
+
+    const promise = playSampleVoiceNote(voiceSet, midi, duration, gainScale);
+
+    if (promise && typeof promise.catch === "function") {
+      promise.catch(() => {
+        playFallbackMidiNote(midi, duration, gainScale);
+      });
+    }
+  }
+
+  function playNoteName(note, duration = 0.75, gainScale = 1, voiceSet = "femaleSample") {
+    const midi = noteToMidi(note);
+    if (midi !== null) {
+      playMidiNote(midi, duration, gainScale, voiceSet);
+    }
+  }
+
+  function updatePlayPauseButton() {
+    const btn = $("playPauseButton");
+    if (btn) btn.textContent = isPlaying ? "停止" : "再生";
+  }
+
+  function startPlayback() {
+    ensureAudioReady();
+
+    if (isPlaying) return;
+    isPlaying = true;
+    playbackIndex = Math.max(0, Math.min(playbackIndex, getPlaybackLength() - 1));
+    updatePlayPauseButton();
+    playCurrentStep();
+  }
+
+  function playCurrentStep() {
+    if (!isPlaying) return;
+
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    const length = getPlaybackLength();
+    const duration = getStepDurationSeconds();
+
+    if (playbackIndex >= length) {
+      stopPlayback(true);
+      return;
+    }
+
+    renderScore();
+
+    if (!voiceMuteState.cantus && cantus[playbackIndex]) playNoteName(cantus[playbackIndex], duration * 1.05, 0.95, "maleSample");
+    if (!voiceMuteState.counterpoint && counterpoint[playbackIndex]) playNoteName(counterpoint[playbackIndex], duration * 1.05, 1.15, "femaleSample");
+
+    playbackTimerId = window.setTimeout(() => {
+      playbackIndex += 1;
+      playCurrentStep();
+    }, duration * 1000);
+  }
+
+  function stopPlayback(reset = false) {
+    isPlaying = false;
+    if (playbackTimerId) window.clearTimeout(playbackTimerId);
+    playbackTimerId = null;
+    if (reset) playbackIndex = 0;
+    updatePlayPauseButton();
+    renderScore();
+  }
+
+  function togglePlayback() {
+    if (isPlaying) stopPlayback(false);
+    else startPlayback();
+  }
+
+  function syncVoiceMuteButtons() {
+    const cp = $("muteCounterpointButton");
+    const cf = $("muteCantusButton");
+
+    if (cp) {
+      cp.classList.toggle("muted", voiceMuteState.counterpoint);
+      cp.setAttribute("aria-pressed", voiceMuteState.counterpoint ? "true" : "false");
+    }
+    if (cf) {
+      cf.classList.toggle("muted", voiceMuteState.cantus);
+      cf.setAttribute("aria-pressed", voiceMuteState.cantus ? "true" : "false");
+    }
+  }
+
+  function toggleVoiceMute(voice) {
+    voiceMuteState[voice] = !voiceMuteState[voice];
+    syncVoiceMuteButtons();
+    renderScore();
+  }
+
+  function updateDisplays() {
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    const cantusDisplay = $("cantusDisplay");
+    const counterpointDisplay = $("counterpointDisplay");
+    const count = $("counterpointCount");
+
+    if (cantusDisplay) cantusDisplay.textContent = cantus.join(" ");
+    if (counterpointDisplay) counterpointDisplay.textContent = counterpoint.filter(Boolean).join(" ");
+    if (count) count.textContent = String(counterpoint.filter(Boolean).length);
+  }
+
+  function analyzeCounterpoint() {
+    const result = $("analysisInlineResult");
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint").filter(Boolean);
+
+    if (!result) return;
+
+    if (!cantus.length) {
+      result.innerHTML = "定旋律が読み込まれていません。";
+      return;
+    }
+
+    if (!counterpoint.length) {
+      result.innerHTML = "対旋律が未入力です。";
+      return;
+    }
+
+    const issues = [];
+    const len = Math.min(cantus.length, counterpoint.length);
+
+    for (let i = 0; i < len; i += 1) {
+      const cMidi = noteToMidi(cantus[i]);
+      const pMidi = noteToMidi(counterpoint[i]);
+      if (cMidi === null || pMidi === null) continue;
+
+      const interval = Math.abs(pMidi - cMidi) % 12;
+      const allowed = [0, 3, 4, 7, 8, 9].includes(interval);
+
+      if (!allowed) {
+        issues.push(`${i + 1}音目：不協和音程の可能性`);
+      }
+    }
+
+    if (!issues.length) {
+      result.innerHTML = "大きな問題は見つかりませんでした。";
+      return;
+    }
+
+    result.innerHTML = `${issues.length} 件の指摘があります。<br>${issues.join("<br>")}`;
+  }
+
+  function exportMidi() {
+    alert("MIDI書き出しは次の段階で再接続します。現在は表示・入力・再生の安定化を優先しています。");
+  }
+
+  
+  function normalizeLetterInput(letter) {
+    const upper = String(letter || "").toUpperCase();
+    if (upper === "H") return "B";
+    if (["A", "B", "C", "D", "E", "F", "G"].includes(upper)) return upper;
+    return "";
+  }
+
+  function octaveForLetterInput(letter) {
+    const upper = normalizeLetterInput(letter);
+    // Keep first-species counterpoint in a comfortable upper-staff range.
+    if (["A", "B"].includes(upper)) return 4;
+    return 4;
+  }
+
+  function inputLetterNote(letter) {
+    const normalized = normalizeLetterInput(letter);
+    if (!normalized) return;
+
+    const cantus = getNotesFromTextarea("cantus");
+    const counterpoint = getNotesFromTextarea("counterpoint");
+    const length = Math.max(cantus.length, counterpoint.length, 1);
+
+    while (counterpoint.length < length) counterpoint.push("");
+
+    selectedIndex = Math.max(0, Math.min(length - 1, selectedIndex));
+
+    const note = `${normalized}${octaveForLetterInput(normalized)}`;
+    counterpoint[selectedIndex] = note;
+
+    setNotesToTextarea("counterpoint", counterpoint);
+    renderScore();
+    updateDisplays();
+    playNoteName(note, 0.65, 1.15, "femaleSample");
+
+    if (selectedIndex < length - 1) {
+      selectedIndex += 1;
+      renderScore();
+      updateDisplays();
+    }
+  }
+
+function handleKeyboard(event) {
+    const tag = event.target && event.target.tagName ? event.target.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "textarea") return;
+
+    const key = event.key;
+
+    if (/^[a-hA-H]$/.test(key)) {
+      event.preventDefault();
+      event.stopPropagation();
+      inputLetterNote(key);
+      return;
+    }
+
+    if (key === "ArrowLeft") {
+      event.preventDefault();
+      event.stopPropagation();
+      moveSelection(-1);
+    } else if (key === "ArrowRight") {
+      event.preventDefault();
+      event.stopPropagation();
+      moveSelection(1);
+    } else if (key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      moveSelectedNote(1);
+    } else if (key === "ArrowDown") {
+      event.preventDefault();
+      event.stopPropagation();
+      moveSelectedNote(-1);
+    } else if (key === " " || event.code === "Space") {
+      event.preventDefault();
+      event.stopPropagation();
+      togglePlayback();
+    } else if (key === "Delete" || key === "Backspace") {
+      event.preventDefault();
+      event.stopPropagation();
+      deleteSelectedNote();
+    }
+  }
+
+  function bindEvents() {
+    $("exerciseSelect")?.addEventListener("change", loadSelectedExercise);
+    $("loadExerciseButton")?.addEventListener("click", loadSelectedExercise);
+    $("loadExampleButton")?.addEventListener("click", loadExample);
+    $("refreshScoreButton")?.addEventListener("click", renderScore);
+    $("exportMidiButton")?.addEventListener("click", exportMidi);
+    $("deleteLastButton")?.addEventListener("click", undoCounterpointNote);
+    $("clearCounterpointButton")?.addEventListener("click", clearCounterpoint);
+    $("playSelectedButton")?.addEventListener("click", playSelectedNote);
+    $("playPauseButton")?.addEventListener("click", togglePlayback);
+    $("resetStartButton")?.addEventListener("click", () => stopPlayback(true));
+    $("muteCounterpointButton")?.addEventListener("click", () => toggleVoiceMute("counterpoint"));
+    $("muteCantusButton")?.addEventListener("click", () => toggleVoiceMute("cantus"));
+    $("scoreEditor")?.addEventListener("click", handleScoreClick);
+    $("analyzeButton")?.addEventListener("click", analyzeCounterpoint);
+
+    window.addEventListener("keydown", handleKeyboard, { capture: true });
+    document.addEventListener("keydown", handleKeyboard, { capture: true });
+  }
+
+  function init() {
+    populateExercises();
+    bindEvents();
+    loadSelectedExercise();
+    updatePlayPauseButton();
+    syncVoiceMuteButtons();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+  window.addEventListener("load", () => {
+    if (!$("scoreEditor")?.children.length) init();
+  });
+
+  // expose minimal API for inline compatibility
+  window.loadSelectedExercise = loadSelectedExercise;
+  window.loadExample = loadExample;
+  window.setExample = loadExample;
+  window.renderScore = renderScore;
+  window.undoCounterpointNote = undoCounterpointNote;
+  window.clearCounterpoint = clearCounterpoint;
+  window.playSelectedNote = playSelectedNote;
+  window.togglePlayback = togglePlayback;
+  window.stopPlayback = stopPlayback;
+  window.analyzeCounterpoint = analyzeCounterpoint;
+  window.exportMidi = exportMidi;
+  window.toggleVoiceMuteFromButton = toggleVoiceMute;
+})();

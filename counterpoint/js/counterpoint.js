@@ -405,12 +405,12 @@ function moveNoteChromatic(note, semitone) {
     const width = isBass ? 68 : 72;
     const height = isBass ? 88 : 136;
     const x = SCORE.left - 60;
-    const y = isBass ? bottomLineY - 76 : bottomLineY - 117;
+    const y = isBass ? bottomLineY - 76 : bottomLineY - 112;
 
     // SVG fallback clef below PNG.
     const fallback = svgEl("text", {
       x: SCORE.left - 54,
-      y: isBass ? bottomLineY - 20 : bottomLineY - 25,
+      y: isBass ? bottomLineY - 20 : bottomLineY - 20,
       class: ["stable-clef", isBass ? "bass" : "treble", "clef-fallback"].join(" ")
     });
     fallback.textContent = isBass ? "𝄢" : "𝄞";
